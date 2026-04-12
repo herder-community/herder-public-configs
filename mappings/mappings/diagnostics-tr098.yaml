@@ -1,0 +1,121 @@
+# Canonical → TR-098 device path mappings for TR-143 performance
+# diagnostics.
+#
+# Maps the platform-reserved `canonical.diagnostics.*` paths to their
+# `InternetGatewayDevice.*` TR-098 equivalents. Any TR-098 CPE uses
+# this data model, so this mapping lets the Operations tab
+# download/upload diagnostic buttons work end-to-end.
+#
+# For a real TR-181 fleet, operators ship an equivalent file with
+# the same canonical names on the LHS and `Device.IP.Diagnostics.*`
+# on the RHS. The canonical names are platform-owned and reserved -
+# mapping validation rejects any attempt to redefine them with the
+# wrong valueType or as a computed entry.
+#
+# See #218 for the bug that motivated this file.
+name: diagnostics-tr098
+
+mappings:
+  # --- Download diagnostics: writable inputs ---
+
+  - canonical: canonical.diagnostics.download.url
+    valueType: string
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.DownloadURL
+
+  - canonical: canonical.diagnostics.download.state
+    valueType: string
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState
+
+  - canonical: canonical.diagnostics.download.dscp
+    valueType: unsignedint
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.DSCP
+
+  - canonical: canonical.diagnostics.download.ethernet_priority
+    valueType: unsignedint
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.EthernetPriority
+
+  - canonical: canonical.diagnostics.download.interface
+    valueType: string
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.Interface
+
+  # --- Download diagnostics: read-only outputs (populated by CPE on COMPLETE) ---
+
+  - canonical: canonical.diagnostics.download.rom_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.ROMTime
+
+  - canonical: canonical.diagnostics.download.bom_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.BOMTime
+
+  - canonical: canonical.diagnostics.download.eom_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.EOMTime
+
+  - canonical: canonical.diagnostics.download.test_bytes_received
+    valueType: unsignedint
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.TestBytesReceived
+
+  - canonical: canonical.diagnostics.download.total_bytes_received
+    valueType: unsignedint
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.TotalBytesReceived
+
+  - canonical: canonical.diagnostics.download.tcp_open_request_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.TCPOpenRequestTime
+
+  - canonical: canonical.diagnostics.download.tcp_open_response_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.DownloadDiagnostics.TCPOpenResponseTime
+
+  # --- Upload diagnostics: writable inputs ---
+
+  - canonical: canonical.diagnostics.upload.url
+    valueType: string
+    devicePath: InternetGatewayDevice.UploadDiagnostics.UploadURL
+
+  - canonical: canonical.diagnostics.upload.state
+    valueType: string
+    devicePath: InternetGatewayDevice.UploadDiagnostics.DiagnosticsState
+
+  - canonical: canonical.diagnostics.upload.test_file_length
+    valueType: unsignedint
+    devicePath: InternetGatewayDevice.UploadDiagnostics.TestFileLength
+
+  - canonical: canonical.diagnostics.upload.dscp
+    valueType: unsignedint
+    devicePath: InternetGatewayDevice.UploadDiagnostics.DSCP
+
+  - canonical: canonical.diagnostics.upload.ethernet_priority
+    valueType: unsignedint
+    devicePath: InternetGatewayDevice.UploadDiagnostics.EthernetPriority
+
+  - canonical: canonical.diagnostics.upload.interface
+    valueType: string
+    devicePath: InternetGatewayDevice.UploadDiagnostics.Interface
+
+  # --- Upload diagnostics: read-only outputs ---
+
+  - canonical: canonical.diagnostics.upload.rom_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.UploadDiagnostics.ROMTime
+
+  - canonical: canonical.diagnostics.upload.bom_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.UploadDiagnostics.BOMTime
+
+  - canonical: canonical.diagnostics.upload.eom_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.UploadDiagnostics.EOMTime
+
+  - canonical: canonical.diagnostics.upload.total_bytes_sent
+    valueType: unsignedint
+    devicePath: InternetGatewayDevice.UploadDiagnostics.TotalBytesSent
+
+  - canonical: canonical.diagnostics.upload.tcp_open_request_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.UploadDiagnostics.TCPOpenRequestTime
+
+  - canonical: canonical.diagnostics.upload.tcp_open_response_time
+    valueType: datetime
+    devicePath: InternetGatewayDevice.UploadDiagnostics.TCPOpenResponseTime

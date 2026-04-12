@@ -1,0 +1,8 @@
+name: seed-boot
+triggers:
+  - boot
+deviceSelector: {}
+desired:
+  script: "scripts/boot.js"
+priority: 50
+enabled: true

@@ -1,0 +1,8 @@
+name: seed-periodic
+triggers:
+  - periodic
+deviceSelector: {}
+desired:
+  script: "scripts/periodic.js"
+priority: 50
+enabled: true

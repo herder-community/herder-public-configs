@@ -1,0 +1,8 @@
+name: seed-first-contact
+triggers:
+  - first_contact
+deviceSelector: {}
+desired:
+  script: "scripts/first_contact.js"
+priority: 50
+enabled: true
