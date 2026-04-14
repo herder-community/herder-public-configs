@@ -6,15 +6,12 @@
 // enables periodic inform with a default interval.
 //
 // Supports both TR-181 (Device.) and TR-098 (InternetGatewayDevice.) devices.
+// Detection: check if a TR-098 parameter exists from the Inform data.
 
-// Detect data model root from device's known parameters.
 var root = "Device.";
-var params = device.readAll();
-for (var key in params) {
-  if (key.indexOf("InternetGatewayDevice.") === 0) {
-    root = "InternetGatewayDevice.";
-    break;
-  }
+var igdTest = device.get("InternetGatewayDevice.DeviceInfo.Manufacturer");
+if (igdTest) {
+  root = "InternetGatewayDevice.";
 }
 
 // Fetch full device info subtree for parameter database population.

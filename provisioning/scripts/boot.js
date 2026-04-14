@@ -8,12 +8,9 @@
 // Supports both TR-181 (Device.) and TR-098 (InternetGatewayDevice.) devices.
 
 var root = "Device.";
-var params = device.readAll();
-for (var key in params) {
-  if (key.indexOf("InternetGatewayDevice.") === 0) {
-    root = "InternetGatewayDevice.";
-    break;
-  }
+var igdTest = device.get("InternetGatewayDevice.DeviceInfo.Manufacturer");
+if (igdTest) {
+  root = "InternetGatewayDevice.";
 }
 
 // Refresh device info (firmware may have changed after reboot).
