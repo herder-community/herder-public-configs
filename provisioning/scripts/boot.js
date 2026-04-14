@@ -1,30 +1,21 @@
 // Seed: Boot — refresh parameters, enforce config, track boot events.
 // Triggered on: boot (TR-069 "1 BOOT")
 //
-// Runs on device reboot. Refreshes device info (firmware may have
-// changed after reboot), enforces management config, and tags the
-// device as recently booted for operator tracking.
-//
-// Supports both TR-181 (Device.) and TR-098 (InternetGatewayDevice.) devices.
-
-var root = "Device.";
-var igdTest = device.fetch("InternetGatewayDevice.DeviceInfo.Manufacturer");
-if (igdTest && igdTest.length > 0) {
-  root = "InternetGatewayDevice.";
-}
+// Uses canonical paths — the mapping profile translates to the correct
+// device-native paths (TR-098/TR-181/vendor) automatically.
 
 // Refresh device info (firmware may have changed after reboot).
-var firmware = device.fetch(root + "DeviceInfo.SoftwareVersion");
-var hardware = device.fetch(root + "DeviceInfo.HardwareVersion");
+var firmware = device.fetch("canonical.device.software_version");
+var hardware = device.fetch("canonical.device.hardware_version");
 
 // Enforce connection request credentials.
 var crUsername = device.oui + "-" + device.serial;
-device.set(root + "ManagementServer.ConnectionRequestUsername", crUsername);
-device.set(root + "ManagementServer.ConnectionRequestPassword", crUsername);
+device.set("canonical.mgmt.connection_request_username", crUsername);
+device.set("canonical.mgmt.connection_request_password", crUsername);
 
 // Enforce periodic inform config.
-device.set(root + "ManagementServer.PeriodicInformEnable", true);
-device.set(root + "ManagementServer.PeriodicInformInterval", 300);
+device.set("canonical.mgmt.periodic_inform_enable", true);
+device.set("canonical.mgmt.periodic_inform_interval", 300);
 
 // Tag device as recently booted (operators can track reboots).
 device.addTag("boot-seen");

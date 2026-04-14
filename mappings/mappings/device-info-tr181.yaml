@@ -1,0 +1,45 @@
+# Canonical → TR-181 device info mappings.
+#
+# Same canonical paths as device-info-tr098, mapped to Device.* tree.
+name: device-info-tr181
+
+mappings:
+  - canonical: canonical.device.manufacturer
+    valueType: string
+    devicePath: Device.DeviceInfo.Manufacturer
+
+  - canonical: canonical.device.manufacturer_oui
+    valueType: string
+    devicePath: Device.DeviceInfo.ManufacturerOUI
+
+  - canonical: canonical.device.product_class
+    valueType: string
+    devicePath: Device.DeviceInfo.ProductClass
+
+  - canonical: canonical.device.serial_number
+    valueType: string
+    devicePath: Device.DeviceInfo.SerialNumber
+
+  - canonical: canonical.device.hardware_version
+    valueType: string
+    devicePath: Device.DeviceInfo.HardwareVersion
+
+  - canonical: canonical.device.software_version
+    valueType: string
+    devicePath: Device.DeviceInfo.SoftwareVersion
+
+  - canonical: canonical.device.model_name
+    valueType: string
+    devicePath: Device.DeviceInfo.ModelName
+
+  - canonical: canonical.device.description
+    valueType: string
+    devicePath: Device.DeviceInfo.Description
+
+  - canonical: canonical.device.uptime
+    valueType: unsignedint
+    devicePath: Device.DeviceInfo.UpTime
+
+  - canonical: canonical.device.spec_version
+    valueType: string
+    devicePath: Device.DeviceInfo.SpecVersion

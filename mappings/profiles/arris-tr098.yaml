@@ -1,0 +1,25 @@
+# Profile for Arris NVG series TR-098 devices.
+#
+# Arris NVG residential gateways use the InternetGatewayDevice data model.
+# Matched by OUI + product class. Operators should add more product classes
+# as they onboard additional Arris models.
+name: arris-nvg-tr098
+priority: 50
+
+deviceSelector:
+  matchLabels:
+    oui: "0000C5"
+  matchExpressions:
+    - key: product_class
+      operator: In
+      values:
+        - "NVG578LX"
+        - "NVG448BQ"
+        - "NVG468MQ"
+        - "NVG589"
+        - "NVG599"
+
+parameterMappings:
+  - device-info-tr098
+  - mgmt-tr098
+  - diagnostics-tr098

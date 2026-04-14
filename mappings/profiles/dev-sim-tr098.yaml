@@ -1,13 +1,7 @@
-# Reference DeviceProfile for a dev TR-098 CPE simulator.
+# Profile for the dev TR-098 CPE simulator (genieacs-sim).
 #
-# This profile exists so the dev stack can exercise end-to-end flows
-# that require vendor mapping - most importantly the Operations tab
-# download/upload diagnostics. Real operators ship their own profiles
-# matched against their own vendor/model/firmware fleet and should
-# NOT inherit this file as-is.
-#
-# Selector scope is narrow: only devices with OUI 202BC1 match.
-# Update the matchLabels if your simulator uses a different OUI.
+# Matches the sim's OUI 202BC1. Includes all TR-098 mappings so
+# provisioning seed scripts work end-to-end in dev.
 name: dev-sim-tr098
 priority: 100
 
@@ -16,4 +10,6 @@ deviceSelector:
     oui: "202BC1"
 
 parameterMappings:
+  - device-info-tr098
+  - mgmt-tr098
   - diagnostics-tr098
