@@ -1,22 +1,33 @@
-// Seed: Boot - refresh parameters, enforce config, track boot events.
+// Seed: Boot — refresh parameters, enforce config, track boot events.
 // Triggered on: boot (TR-069 "1 BOOT")
 //
 // Runs on device reboot. Refreshes device info (firmware may have
 // changed after reboot), enforces management config, and tags the
 // device as recently booted for operator tracking.
+//
+// Supports both TR-181 (Device.) and TR-098 (InternetGatewayDevice.) devices.
+
+var root = "Device.";
+var params = device.readAll();
+for (var key in params) {
+  if (key.indexOf("InternetGatewayDevice.") === 0) {
+    root = "InternetGatewayDevice.";
+    break;
+  }
+}
 
 // Refresh device info (firmware may have changed after reboot).
-var firmware = device.fetch("Device.DeviceInfo.SoftwareVersion");
-var hardware = device.fetch("Device.DeviceInfo.HardwareVersion");
+var firmware = device.fetch(root + "DeviceInfo.SoftwareVersion");
+var hardware = device.fetch(root + "DeviceInfo.HardwareVersion");
 
 // Enforce connection request credentials.
 var crUsername = device.oui + "-" + device.serial;
-device.set("Device.ManagementServer.ConnectionRequestUsername", crUsername);
-device.set("Device.ManagementServer.ConnectionRequestPassword", crUsername);
+device.set(root + "ManagementServer.ConnectionRequestUsername", crUsername);
+device.set(root + "ManagementServer.ConnectionRequestPassword", crUsername);
 
 // Enforce periodic inform config.
-device.set("Device.ManagementServer.PeriodicInformEnable", true);
-device.set("Device.ManagementServer.PeriodicInformInterval", 300);
+device.set(root + "ManagementServer.PeriodicInformEnable", true);
+device.set(root + "ManagementServer.PeriodicInformInterval", 300);
 
 // Tag device as recently booted (operators can track reboots).
 device.addTag("boot-seen");
