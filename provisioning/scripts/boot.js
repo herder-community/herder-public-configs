@@ -8,8 +8,8 @@
 // Supports both TR-181 (Device.) and TR-098 (InternetGatewayDevice.) devices.
 
 var root = "Device.";
-var igdTest = device.get("InternetGatewayDevice.DeviceInfo.Manufacturer");
-if (igdTest) {
+var igdTest = device.fetch("InternetGatewayDevice.DeviceInfo.Manufacturer");
+if (igdTest && igdTest.length > 0) {
   root = "InternetGatewayDevice.";
 }
 
