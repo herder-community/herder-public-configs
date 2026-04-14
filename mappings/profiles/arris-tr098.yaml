@@ -10,7 +10,7 @@ deviceSelector:
   matchLabels:
     oui: "0000C5"
   matchExpressions:
-    - key: product_class
+    - key: productClass
       operator: In
       values:
         - "NVG578LX"
