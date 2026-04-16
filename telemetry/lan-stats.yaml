@@ -1,11 +1,15 @@
-# Telemetry profile: LAN ethernet interface byte counters for ARRIS NVG devices.
+# Telemetry profile: WAN + LAN ethernet interface monitoring for ARRIS NVG.
 #
-# Collects BytesSent / BytesReceived across all LAN Ethernet interfaces on
-# every CWMP session. interval=0 means "collect on every session" (passive
-# collection — no active scheduling via Connection Request).
+# Collects WAN Ethernet Stats (byte/packet counters, always incrementing on
+# a live router) plus WAN Ethernet config attributes (Status, MACAddress,
+# MaxBitRate, DuplexMode). Also retains the LAN Ethernet byte counters for
+# coverage.
 #
-# Dev/test profile for validating the #278 CWMP session telemetry phase.
-# Operators should replace or augment this with their own profiles.
+# interval=0 means passive collection — one GPV per CWMP session, no
+# Connection Request scheduling.
+#
+# Dev/test profile for validating the ispx-ltd/OpenACS#278 CWMP session
+# telemetry phase. Operators should tune for their fleet.
 name: arris-lan-stats
 priority: 10
 
@@ -14,6 +18,27 @@ deviceSelector:
     oui: "0000C5"
 
 parameters:
+  # WAN Ethernet interface stats — counters change every session on a live link.
+  - path: "InternetGatewayDevice.WANDevice.*.WANEthernetInterfaceConfig.Stats.BytesSent"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANEthernetInterfaceConfig.Stats.BytesReceived"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANEthernetInterfaceConfig.Stats.PacketsSent"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANEthernetInterfaceConfig.Stats.PacketsReceived"
+    interval: 0
+
+  # WAN Ethernet config — scalar values reflecting current link state.
+  - path: "InternetGatewayDevice.WANDevice.*.WANEthernetInterfaceConfig.Status"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANEthernetInterfaceConfig.MACAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANEthernetInterfaceConfig.MaxBitRate"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANEthernetInterfaceConfig.DuplexMode"
+    interval: 0
+
+  # LAN Ethernet byte counters — retained from initial validation.
   - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesSent"
     interval: 0
   - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesReceived"
