@@ -1,6 +1,7 @@
 name: seed-periodic
 triggers:
   - periodic
+  - connection_request
 deviceSelector: {}
 desired:
   script: "scripts/periodic.js"
