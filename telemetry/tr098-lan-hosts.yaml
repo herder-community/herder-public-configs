@@ -1,0 +1,63 @@
+# Telemetry profile: TR-098 connected hosts table.
+#
+# Per-device table of clients currently or recently associated with the
+# gateway's LAN — wired and wireless. Covers IPv4, IPv6 (both legacy
+# scalar and modern instance-table forms), MAC, interface type, and
+# L2 interface back-reference so dashboards can correlate hosts with
+# WLAN configs or wired ports.
+#
+# LeaseTimeRemaining deliberately excluded — it counts down every second,
+# a poor time-series fit (pure noise in the history hypertable).
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: Arris NVG fleet. Operators with other TR-098 CPE clone this
+# file into their herder-public-configs fork and adjust the selector's
+# matchLabels / matchExpressions to match their fleet.
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+name: tr098-lan-hosts
+priority: 10
+
+deviceSelector:
+  matchLabels:
+    manufacturer: "Arris"
+  matchExpressions:
+    - key: model
+      operator: In
+      values:
+        - "NVG578LX"
+        - "NVG468MQ"
+        - "NVG589"
+        - "NVG599"
+
+parameters:
+  # --- Table cardinality ---
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.HostNumberOfEntries"
+    interval: 0
+
+  # --- Per-host fields ---
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.Active"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.HostName"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.MACAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.AddressSource"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.InterfaceType"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.Layer2Interface"
+    interval: 0
+
+  # --- IPv6: legacy scalar form (older TR-098 variants) ---
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPv6Address"
+    interval: 0
+
+  # --- IPv6: modern instance-table form ---
+  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPv6Address.*.IPAddress"
+    interval: 0
