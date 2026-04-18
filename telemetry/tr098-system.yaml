@@ -1,0 +1,36 @@
+# Telemetry profile: TR-098 system identity.
+#
+# Collects device identity, firmware, and uptime — the minimum set
+# needed for fleet identity dashboards and firmware-distribution views.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: Arris NVG fleet. Operators with other TR-098 CPE clone this
+# file into their herder-public-configs fork and adjust the selector's
+# matchLabels / matchExpressions to match their fleet.
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+name: tr098-system
+priority: 10
+
+deviceSelector:
+  matchLabels:
+    manufacturer: "Arris"
+  matchExpressions:
+    - key: model
+      operator: In
+      values:
+        - "NVG578LX"
+        - "NVG468MQ"
+        - "NVG589"
+        - "NVG599"
+
+parameters:
+  - path: "InternetGatewayDevice.DeviceInfo.HardwareVersion"
+    interval: 0
+  - path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+    interval: 0
+  - path: "InternetGatewayDevice.DeviceInfo.UpTime"
+    interval: 0

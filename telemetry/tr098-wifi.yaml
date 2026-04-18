@@ -1,0 +1,91 @@
+# Telemetry profile: TR-098 WiFi per-SSID/radio.
+#
+# Covers four concerns:
+#   1. Radio/SSID state — enable flag, status, SSID, BSSID, channel,
+#      802.11 standard variant, beacon type.
+#   2. Security/auth posture — authentication mode, encryption modes
+#      (WPA + 802.11i), SSID advertisement, transmit power. Useful for
+#      auditing fleet-wide security (detect open SSIDs, WEP leakage,
+#      hidden-SSID deployments).
+#   3. Byte counters — aggregate per-SSID BytesSent/BytesReceived.
+#      Other Stats counters (Errors, Discards, Packets, Multicast, Unicast)
+#      excluded as operationally low-value.
+#   4. Associated clients — MAC, IP, auth state, last transmit rate.
+#      Signal strength / RSSI deliberately NOT included: those paths are
+#      vendor-specific X_<VENDOR>_* extensions on TR-098 CPE. Operators
+#      wanting per-client signal strength layer a vendor profile on top.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: Arris NVG fleet. Operators with other TR-098 CPE clone this
+# file into their herder-public-configs fork and adjust the selector's
+# matchLabels / matchExpressions to match their fleet.
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+name: tr098-wifi
+priority: 10
+
+deviceSelector:
+  matchLabels:
+    manufacturer: "Arris"
+  matchExpressions:
+    - key: model
+      operator: In
+      values:
+        - "NVG578LX"
+        - "NVG468MQ"
+        - "NVG589"
+        - "NVG599"
+
+parameters:
+  # --- Radio / SSID state ---
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Status"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Enable"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.SSID"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.BSSID"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Channel"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Standard"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.BeaconType"
+    interval: 0
+
+  # --- Security / auth posture ---
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.BasicAuthenticationMode"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.WPAEncryptionModes"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.IEEE11iEncryptionModes"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.SSIDAdvertisementEnabled"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.TransmitPower"
+    interval: 0
+
+  # --- Byte counters ---
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Stats.BytesSent"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Stats.BytesReceived"
+    interval: 0
+
+  # --- Association counts ---
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.TotalAssociations"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDeviceNumberOfEntries"
+    interval: 0
+
+  # --- Associated clients (standard TR-098 only, no X_<VENDOR>_*) ---
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.AssociatedDeviceMACAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.AssociatedDeviceIPAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.AssociatedDeviceAuthenticationState"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.LastDataTransmitRate"
+    interval: 0

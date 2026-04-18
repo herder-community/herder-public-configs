@@ -1,0 +1,39 @@
+# Telemetry profile: TR-098 LAN Ethernet interface.
+#
+# Per-port LAN Ethernet link state and aggregate byte counters.
+# Error/discard/multicast/unicast/packet counters deliberately excluded —
+# operationally low-value for day-1 operator dashboards.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: Arris NVG fleet. Operators with other TR-098 CPE clone this
+# file into their herder-public-configs fork and adjust the selector's
+# matchLabels / matchExpressions to match their fleet.
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+name: tr098-lan-eth
+priority: 10
+
+deviceSelector:
+  matchLabels:
+    manufacturer: "Arris"
+  matchExpressions:
+    - key: model
+      operator: In
+      values:
+        - "NVG578LX"
+        - "NVG468MQ"
+        - "NVG589"
+        - "NVG599"
+
+parameters:
+  - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Status"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.MACAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesSent"
+    interval: 0
+  - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesReceived"
+    interval: 0

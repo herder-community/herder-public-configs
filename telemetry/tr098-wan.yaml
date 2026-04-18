@@ -1,0 +1,121 @@
+# Telemetry profile: TR-098 WAN link + L3 connection state.
+#
+# Covers three concerns:
+#   1. L1 physical link state (WANCommonInterfaceConfig) — WAN access type,
+#      link status, max bitrates, enable flag.
+#   2. Aggregate byte/packet counters (WANCommonInterfaceConfig.Total*) —
+#      total-across-all-connections, works regardless of L3 type (IP/PPP).
+#   3. L3 connection state — both WANIPConnection (DHCP/static) and
+#      WANPPPConnection (PPPoE/PPPoA) paths. Wildcard-safe: whichever
+#      the CPE doesn't use returns zero instances, no fault.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: Arris NVG fleet. Operators with other TR-098 CPE clone this
+# file into their herder-public-configs fork and adjust the selector's
+# matchLabels / matchExpressions to match their fleet.
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+name: tr098-wan
+priority: 10
+
+deviceSelector:
+  matchLabels:
+    manufacturer: "Arris"
+  matchExpressions:
+    - key: model
+      operator: In
+      values:
+        - "NVG578LX"
+        - "NVG468MQ"
+        - "NVG589"
+        - "NVG599"
+
+parameters:
+  # --- WANCommonInterfaceConfig: L1 state (always present) ---
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.WANAccessType"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.PhysicalLinkStatus"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.EnabledForInternet"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.Layer1UpstreamMaxBitRate"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.Layer1DownstreamMaxBitRate"
+    interval: 0
+
+  # --- WANCommonInterfaceConfig: aggregate counters (covers both IP and PPP) ---
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.TotalBytesSent"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.TotalBytesReceived"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.TotalPacketsSent"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.TotalPacketsReceived"
+    interval: 0
+
+  # --- WANIPConnection: L3 DHCP/static (wildcard-safe if absent) ---
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ConnectionStatus"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ConnectionType"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Uptime"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.LastConnectionError"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.AddressingType"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ExternalIPAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.SubnetMask"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.DefaultGateway"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.DNSServers"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.MACAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.NATEnabled"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Stats.EthernetBytesSent"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Stats.EthernetBytesReceived"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Stats.EthernetPacketsSent"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Stats.EthernetPacketsReceived"
+    interval: 0
+
+  # --- WANPPPConnection: L3 PPPoE/PPPoA (wildcard-safe if absent) ---
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ConnectionStatus"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ConnectionType"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Uptime"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.LastConnectionError"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ExternalIPAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.DNSServers"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.MACAddress"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.TransportType"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.PPPoEACName"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.PPPoEServiceName"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Username"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Stats.EthernetBytesSent"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Stats.EthernetBytesReceived"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Stats.EthernetPacketsSent"
+    interval: 0
+  - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Stats.EthernetPacketsReceived"
+    interval: 0
