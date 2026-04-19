@@ -18,26 +18,16 @@
 # All params interval=0 (passive — one GPV per natural Inform session,
 # no Connection Request scheduling).
 #
-# Scope: Arris NVG fleet. Operators with other TR-098 CPE clone this
-# file into their herder-public-configs fork and adjust the selector's
-# matchLabels / matchExpressions to match their fleet.
+# Scope: generic TR-098 baseline — match-all. Wildcard paths + standard
+# InternetGatewayDevice.* schema means this is safe to ship against any
+# TR-098-speaking CPE. Operators narrow scope in their fork by adding a
+# deviceSelector (matchLabels / matchExpressions on manufacturer, model,
+# firmwareVersion, tag:*, group_path:*, etc.).
 #
 # Priority 10 — operator-shipped vendor profiles (typical priority 50+)
 # override on conflicting paths.
 name: tr098-wifi
 priority: 10
-
-deviceSelector:
-  matchLabels:
-    manufacturer: "Arris"
-  matchExpressions:
-    - key: model
-      operator: In
-      values:
-        - "NVG578LX"
-        - "NVG468MQ"
-        - "NVG589"
-        - "NVG599"
 
 parameters:
   # --- Radio / SSID state ---
