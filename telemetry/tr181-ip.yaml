@@ -1,0 +1,53 @@
+# Telemetry profile: TR-181 IP interfaces + IPv4/IPv6 address tables.
+#
+# Covers L3 IP state for both address families. No TR-098 analog —
+# TR-181 distinguishes physical Ethernet (Device.Ethernet.Interface.*)
+# from L3 IP (Device.IP.Interface.*), whereas TR-098 bundles L3 into
+# WANIPConnection / WANPPPConnection.
+#
+# Type enum distinguishes Normal / Loopback / Tunnel / Tunneled
+# interfaces — dashboards filter on Type=Normal for the real L3
+# stack and ignore loopback / tunnel noise.
+#
+# IPv6Address.Origin enum (DHCPv6 / SLAAC / Static / AutoConfigured /
+# etc) lets dashboards tell which IPv6 assignments are real vs
+# link-local noise.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: any TR-181-capable CPE (matched via dataModel:device label
+# written by the CWMP handler's detectDataModels helper — see #321).
+# Binds on the first qualifying Inform.
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+name: tr181-ip
+priority: 10
+deviceSelector:
+  matchExpressions:
+    - key: "dataModel:device"
+      operator: Exists
+
+parameters:
+  # --- IP.Interface state ---
+  - path: "Device.IP.Interface.*.Enable"
+    interval: 0
+  - path: "Device.IP.Interface.*.Status"
+    interval: 0
+  - path: "Device.IP.Interface.*.Type"
+    interval: 0
+  - path: "Device.IP.Interface.*.LowerLayers"
+    interval: 0
+
+  # --- IPv4 addresses ---
+  - path: "Device.IP.Interface.*.IPv4Address.*.IPAddress"
+    interval: 0
+  - path: "Device.IP.Interface.*.IPv4Address.*.SubnetMask"
+    interval: 0
+
+  # --- IPv6 addresses ---
+  - path: "Device.IP.Interface.*.IPv6Address.*.IPAddress"
+    interval: 0
+  - path: "Device.IP.Interface.*.IPv6Address.*.Origin"
+    interval: 0
