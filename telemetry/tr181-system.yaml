@@ -1,0 +1,32 @@
+# Telemetry profile: TR-181 system identity.
+#
+# Collects device identity, firmware, and uptime — the minimum set
+# needed for fleet identity dashboards and firmware-distribution views.
+# TR-181 mirror of tr098-system.yaml.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: any TR-181-capable CPE (matched via dataModel:device label
+# written by the CWMP handler's detectDataModels helper — see #321).
+# Binds on the first qualifying Inform (one whose ParameterList
+# contains at least one Device.*-rooted path) — data_models is
+# persisted before session creation, so the label is available when
+# the telemetry phase matches profiles in the same session.
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+name: tr181-system
+priority: 10
+deviceSelector:
+  matchExpressions:
+    - key: "dataModel:device"
+      operator: Exists
+
+parameters:
+  - path: "Device.DeviceInfo.HardwareVersion"
+    interval: 0
+  - path: "Device.DeviceInfo.SoftwareVersion"
+    interval: 0
+  - path: "Device.DeviceInfo.UpTime"
+    interval: 0
