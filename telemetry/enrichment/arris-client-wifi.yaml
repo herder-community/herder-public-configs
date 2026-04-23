@@ -1,0 +1,23 @@
+# Reference enrichment rule: Arris TR-098 per-client WiFi labels.
+#
+# Correlates HNC extender-tree STA params + gateway-tree AssociatedDevice
+# params with the Hosts.Host table to emit per-client labeled rows on every
+# Inform. Labels carry stable client identity (client_mac + hostname) plus
+# topology (via-extender, band) so historical per-client queries stay
+# coherent when STA indices rotate on reconnect.
+#
+# Depends on the Arris vendor telemetry profile (arris-wifi-tr098.yaml)
+# collecting the X_0000C5_* HNC + WLANConfiguration.AssociatedDevice paths.
+# Without that profile, the enrichment script runs but emits no rows.
+#
+# Selector matches CPE whose manufacturer string is "Arris" or "ARRIS" —
+# firmware reports either across the product family. OUI not constrained
+# (the X_0000C5_* paths are self-selecting).
+name: arris-client-wifi
+priority: 50
+deviceSelector:
+  matchExpressions:
+    - key: manufacturer
+      operator: In
+      values: [Arris, ARRIS]
+script: arris-client-rssi-labels.js
