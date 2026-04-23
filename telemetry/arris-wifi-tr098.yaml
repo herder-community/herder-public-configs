@@ -47,10 +47,22 @@ parameters:
   - path: "InternetGatewayDevice.LANDevice.1.X_0000C5_Wireless.HNC.ESS.1.ESSName"
     interval: 0
 
-  # --- Gateway-attached WiFi clients (Arris signal-strength extensions) ---
+  # --- Gateway-attached WiFi clients (standard TR-098 MAC + Arris extensions) ---
+  # AssociatedDeviceMACAddress anchors the client MAC per (WLAN idx,
+  # AssociatedDevice idx) tuple so the enrichment script can correlate
+  # with the X_0000C5_WLANStats.*.AssociatedDevice.*.Stats.*.ClientRSSI
+  # tree below (same index tuple on both sides).
+  - path: "InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.AssociatedDevice.*.AssociatedDeviceMACAddress"
+    interval: 0
   - path: "InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.AssociatedDevice.*.X_0000C5_SignalStrength"
     interval: 0
   - path: "InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.AssociatedDevice.*.X_0000C5_RSSI"
+    interval: 0
+
+  # --- Per-client WLAN stats (Arris RSSI tree) ---
+  # The real RSSI path on NVG/SURFboard firmware — AssociatedDevice lives
+  # at WLANStats.<wlan>.AssociatedDevice.<ad>.Stats.<n>.ClientRSSI.
+  - path: "InternetGatewayDevice.LANDevice.1.X_0000C5_WLANStats.*.AssociatedDevice.*.Stats.*.ClientRSSI"
     interval: 0
 
   # --- Extender-attached WiFi clients (HNC mesh tree) ---
