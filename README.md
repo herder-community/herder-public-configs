@@ -17,13 +17,17 @@ provisioning/
     ├── first_contact.js
     └── periodic.js
 
-mappings/
+mapping/
 ├── profiles/        # Device profile selectors
-│   └── dev-sim-tr098.yaml   # Dev TR-098 CPE simulator profile
-└── mappings/        # Canonical-to-vendor path mappings
-    └── diagnostics-tr098.yaml  # TR-143 diagnostics mapping
+│   └── dev-sim-tr098.yaml       # Dev TR-098 CPE simulator profile
+├── mappings/        # Canonical-to-vendor path mappings
+│   └── diagnostics-tr098.yaml   # TR-143 diagnostics mapping
+└── identity/        # Identity enrichment profiles (content type: `identity`)
+    └── tr069-standard-identity.yaml  # Baseline firmwareVersion / model / productClass / manufacturer for any TR-069 CPE
 ```
 
 ## Usage
 
-In the Herder UI, go to **Config → Sources → Add Source** and point to this repo's URL. Set the source type to match the content you want to sync (e.g. `provisioning` for rules + scripts, `mapping` for profiles + mappings).
+In the Herder UI, go to **Config → Sources → Add Source** and point to this repo's URL. Set the type mappings to match the content you want to sync — `mapping/profiles` and `mapping/mappings` under the `mapping` source type, `mapping/identity` under the `identity` source type, `provisioning/*` under `provisioning`.
+
+See the [Identity Enrichment guide](https://ispx-ltd.github.io/herder-docs/guides/identity-enrichment/) for what the baseline profile covers and when you need to ship your own vendor override.
