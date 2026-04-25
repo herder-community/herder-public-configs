@@ -16,6 +16,14 @@ mappings:
     valueType: string
     devicePath: Device.ManagementServer.ConnectionRequestPassword
 
+  - canonical: canonical.mgmt.username
+    valueType: string
+    devicePath: Device.ManagementServer.Username
+
+  - canonical: canonical.mgmt.password
+    valueType: string
+    devicePath: Device.ManagementServer.Password
+
   - canonical: canonical.mgmt.periodic_inform_enable
     valueType: boolean
     devicePath: Device.ManagementServer.PeriodicInformEnable
