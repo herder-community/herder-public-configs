@@ -1,0 +1,58 @@
+# Per-client WiFi signal strength and uptime for TR-098-speaking CPEs.
+# Showcases the line panel against the labeled telemetry pipeline that
+# emits one wifi.client.rssi row per associated client (labels:
+# client_mac, hostname, band, via, wlan_idx).
+#
+# Selector: TR-098 devices, identified by the `dataModel:igd` exists
+# expression. Same scoping convention as tr098-overview.yaml.
+schemaVersion: 1
+name: tr098-wifi
+title: TR-098 WiFi
+description: |
+  Per-client WiFi signal strength over time, plus device uptime. RSSI
+  values are emitted by the labeled telemetry pipeline (Arris vendor
+  profile + paired enrichment script) with one series per associated
+  client MAC.
+deviceSelector:
+  matchExpressions:
+    - { key: "dataModel:igd", operator: Exists }
+defaultTimeRange:
+  from: { kind: relative, expr: "now-1h" }
+  to: { kind: relative, expr: "now" }
+defaultRefreshIntervalMs: 60000
+panels:
+  - id: panel-rssi
+    kind: line
+    title: WiFi client RSSI
+    layout: { x: 0, y: 0, w: 12, h: 6 }
+    query:
+      version: 1
+      datasource: telemetry_history_labeled
+      query:
+        agg: avg
+        filters:
+          metric: wifi.client.rssi
+        group_by: ["labels.client_mac"]
+    config:
+      showLegend: true
+      showPoints: false
+      interpolation: monotone
+      yAxis: { kind: fixed, min: -100, max: -20 }
+      unit: " dBm"
+  - id: panel-uptime
+    kind: line
+    title: Uptime
+    layout: { x: 0, y: 6, w: 12, h: 5 }
+    query:
+      version: 1
+      datasource: telemetry_history
+      query:
+        agg: last
+        filters:
+          path: "InternetGatewayDevice.DeviceInfo.UpTime"
+    config:
+      showLegend: false
+      showPoints: false
+      interpolation: monotone
+      yAxis: { kind: auto }
+      unit: " s"
