@@ -53,7 +53,7 @@ panels:
         agg: distinct
         filters:
           path: "InternetGatewayDevice.DeviceInfo.SerialNumber"
-          device_facets: { lifecycle_state: "active" }
+          device_facets: { lifecycle_state: "provisioned" }
     config:
       unit: null
       format: number
