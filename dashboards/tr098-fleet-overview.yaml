@@ -35,17 +35,17 @@ panels:
       thresholds: []
       showSparkline: false
       showPriorPeriodDelta: true
-  - id: panel-fleet-lifecycle
+  - id: panel-fleet-models
     kind: pie
-    title: Lifecycle distribution
+    title: Devices by model
     layout: { x: 4, y: 0, w: 4, h: 4 }
     query:
       version: 1
       datasource: device_parameters
       query:
         agg: count
-        filters: { path: "InternetGatewayDevice.DeviceInfo.UpTime" }
-        group_by: ["lifecycle_state"]
+        filters: { path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion" }
+        group_by: ["model"]
     config:
       shape: donut
       labelPosition: outside
