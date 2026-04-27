@@ -1,0 +1,112 @@
+# Fleet-wide TR-098 device counts, lifecycle distribution, latest
+# firmware spread, and a recent-activity table. Showcases every v1
+# panel kind from OpenACS #415: stat, pie, bar, gauge, table.
+#
+# Selector: TR-098 devices via the dataModel:igd exists expression.
+# Same scoping convention as the other tr098-* dashboards.
+schemaVersion: 1
+name: tr098-fleet-overview
+title: Fleet overview
+description: |
+  Total devices, lifecycle split, top firmware versions, average
+  uptime, and a sortable table of devices by latest WiFi RSSI.
+  One panel of every v1 kind.
+deviceSelector:
+  matchExpressions:
+    - { key: "dataModel:igd", operator: Exists }
+defaultTimeRange:
+  from: { kind: relative, expr: "now-24h" }
+  to: { kind: relative, expr: "now" }
+defaultRefreshIntervalMs: 60000
+panels:
+  - id: panel-fleet-count
+    kind: stat
+    title: Total TR-098 devices
+    layout: { x: 0, y: 0, w: 4, h: 4 }
+    query:
+      version: 1
+      datasource: device_parameters
+      query:
+        agg: distinct
+        filters: { path: "InternetGatewayDevice.DeviceInfo.SerialNumber" }
+    config:
+      unit: null
+      format: number
+      thresholds: []
+      showSparkline: false
+      showPriorPeriodDelta: true
+  - id: panel-fleet-lifecycle
+    kind: pie
+    title: Lifecycle distribution
+    layout: { x: 4, y: 0, w: 4, h: 4 }
+    query:
+      version: 1
+      datasource: device_parameters
+      query:
+        agg: count
+        filters: { path: "InternetGatewayDevice.DeviceInfo.UpTime" }
+        group_by: ["lifecycle_state"]
+    config:
+      shape: donut
+      labelPosition: outside
+      unit: null
+      legend:
+        displayMode: list
+        placement: right
+        calcs: []
+  - id: panel-firmware-bar
+    kind: bar
+    title: Top firmware versions
+    layout: { x: 8, y: 0, w: 4, h: 4 }
+    query:
+      version: 1
+      datasource: device_parameters
+      query:
+        agg: count
+        filters: { path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion" }
+        group_by: ["value"]
+    config:
+      orientation: horizontal
+      stacking: grouped
+      showValueLabels: true
+      unit: null
+      legend:
+        displayMode: hidden
+        placement: bottom
+        calcs: []
+  - id: panel-uptime-gauge
+    kind: gauge
+    title: Avg uptime (current)
+    layout: { x: 0, y: 4, w: 4, h: 4 }
+    query:
+      version: 1
+      datasource: telemetry_history
+      query:
+        agg: last
+        filters: { path: "InternetGatewayDevice.DeviceInfo.UpTime" }
+    config:
+      domain: { min: 0, max: 604800 }
+      thresholds:
+        - { at: 86400, color: "var(--chart-2)" }
+        - { at: 604800, color: "var(--chart-1)" }
+      shape: radial
+      unit: null
+      format: duration_seconds
+  - id: panel-recent-table
+    kind: table
+    title: Devices by latest signal
+    layout: { x: 4, y: 4, w: 8, h: 5 }
+    query:
+      version: 1
+      datasource: telemetry_history_labeled
+      query:
+        agg: last
+        filters: { metric: wifi.client.rssi }
+        group_by: ["device_id"]
+    config:
+      columns:
+        - { key: "labels.device_id", label: "Device", format: text, align: left }
+        - { key: "last", label: "Latest RSSI", format: number, align: right }
+        - { key: "count", label: "Samples", format: number, align: right }
+      defaultSort: { columnKey: "last", direction: asc }
+      density: regular
