@@ -1,10 +1,9 @@
-# Fleet-wide overview rebuilt against the OpenACS Pass 1 + Pass 2 panel
-# polish: 4-stat KPI row scoped by lifecycle_state, distribution donut
-# with centre total caption, Prometheus-backed activity row, and a
-# detail row.
-#
-# Selector: TR-098 devices via the dataModel:igd exists expression.
-# Same scoping convention as the other tr098-* dashboards.
+# Fleet-wide overview. KPIs and distribution panels query the `devices`
+# datasource directly so the fleet shape (total / lifecycle / firmware /
+# manufacturer / model) reflects what's actually in the devices table,
+# not what each CPE happens to have reported as a parameter row.
+# Prometheus drives the platform activity row; telemetry_history /
+# telemetry_history_labeled drive the detail row.
 schemaVersion: 1
 name: tr098-fleet-overview
 title: Fleet overview
@@ -12,9 +11,6 @@ description: |
   Total / active / bootstrapping / decommissioned counts, lifecycle
   distribution, top firmware versions, platform activity from
   Prometheus, and a sortable table of devices by latest WiFi RSSI.
-deviceSelector:
-  matchExpressions:
-    - { key: "dataModel:igd", operator: Exists }
 defaultTimeRange:
   from: { kind: relative, expr: "now-24h" }
   to: { kind: relative, expr: "now" }
@@ -24,21 +20,20 @@ panels:
   - id: panel-fleet-count
     kind: stat
     title: Total devices
-    description: Distinct serial numbers across the fleet
+    description: All known devices across every lifecycle state
     descriptionPlacement: bottom
     layout: { x: 0, y: 0, w: 3, h: 4 }
     query:
       version: 1
-      datasource: device_parameters
+      datasource: devices
       query:
-        agg: distinct
-        filters: { path: "InternetGatewayDevice.DeviceInfo.SerialNumber" }
+        agg: count
     config:
       unit: null
       format: number
       thresholds: []
       showSparkline: false
-      showPriorPeriodDelta: true
+      showPriorPeriodDelta: false
       icon: device
   - id: panel-fleet-active
     kind: stat
@@ -48,12 +43,10 @@ panels:
     layout: { x: 3, y: 0, w: 3, h: 4 }
     query:
       version: 1
-      datasource: device_parameters
+      datasource: devices
       query:
-        agg: distinct
-        filters:
-          path: "InternetGatewayDevice.DeviceInfo.SerialNumber"
-          device_facets: { lifecycle_state: "provisioned" }
+        agg: count
+        filters: { lifecycle_state: "provisioned" }
     config:
       unit: null
       format: number
@@ -69,12 +62,10 @@ panels:
     layout: { x: 6, y: 0, w: 3, h: 4 }
     query:
       version: 1
-      datasource: device_parameters
+      datasource: devices
       query:
-        agg: distinct
-        filters:
-          path: "InternetGatewayDevice.DeviceInfo.SerialNumber"
-          device_facets: { lifecycle_state: "bootstrap" }
+        agg: count
+        filters: { lifecycle_state: "bootstrap" }
     config:
       unit: null
       format: number
@@ -90,12 +81,10 @@ panels:
     layout: { x: 9, y: 0, w: 3, h: 4 }
     query:
       version: 1
-      datasource: device_parameters
+      datasource: devices
       query:
-        agg: distinct
-        filters:
-          path: "InternetGatewayDevice.DeviceInfo.SerialNumber"
-          device_facets: { lifecycle_state: "decommissioned" }
+        agg: count
+        filters: { lifecycle_state: "decommissioned" }
     config:
       unit: null
       format: number
@@ -112,10 +101,9 @@ panels:
     layout: { x: 0, y: 4, w: 6, h: 6 }
     query:
       version: 1
-      datasource: device_parameters
+      datasource: devices
       query:
         agg: count
-        filters: { path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion" }
         group_by: ["lifecycle_state"]
     config:
       shape: donut
@@ -131,15 +119,14 @@ panels:
   - id: panel-firmware-bar
     kind: bar
     title: Top firmware versions
-    description: Distinct SoftwareVersion counts
+    description: Devices grouped by reported firmware version
     layout: { x: 6, y: 4, w: 6, h: 6 }
     query:
       version: 1
-      datasource: device_parameters
+      datasource: devices
       query:
         agg: count
-        filters: { path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion" }
-        group_by: ["value"]
+        group_by: ["firmware_version"]
     config:
       orientation: horizontal
       stacking: grouped
