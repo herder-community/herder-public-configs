@@ -32,11 +32,14 @@ panels:
           metric: wifi.client.rssi
         group_by: ["labels.client_mac"]
     config:
-      showLegend: true
       showPoints: false
       interpolation: monotone
       yAxis: { kind: fixed, min: -100, max: -20 }
       unit: " dBm"
+      legend:
+        displayMode: table
+        placement: right
+        calcs: [last, mean, min, max]
   - id: panel-clients
     kind: line
     title: Active WiFi clients
@@ -49,11 +52,14 @@ panels:
         filters:
           metric: wifi.client.rssi
     config:
-      showLegend: false
       showPoints: false
       interpolation: step
       yAxis: { kind: auto }
       unit: null
+      legend:
+        displayMode: hidden
+        placement: bottom
+        calcs: []
   - id: panel-self-steer
     kind: line
     title: Cumulative self-steer count per client
@@ -67,11 +73,14 @@ panels:
           metric: wifi.client.self_steer_count
         group_by: ["labels.client_mac"]
     config:
-      showLegend: true
       showPoints: false
       interpolation: monotone
       yAxis: { kind: auto }
       unit: null
+      legend:
+        displayMode: table
+        placement: bottom
+        calcs: [last, max]
   - id: panel-steering-unfriendly
     kind: line
     title: Steering-unfriendly events per client
@@ -85,8 +94,11 @@ panels:
           metric: wifi.client.steering_unfriendly
         group_by: ["labels.client_mac"]
     config:
-      showLegend: true
       showPoints: false
       interpolation: monotone
       yAxis: { kind: auto }
       unit: null
+      legend:
+        displayMode: table
+        placement: bottom
+        calcs: [last, max]
