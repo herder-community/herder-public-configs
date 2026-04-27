@@ -37,7 +37,7 @@ panels:
       showPriorPeriodDelta: true
   - id: panel-fleet-models
     kind: pie
-    title: Devices by model
+    title: Devices by product class
     layout: { x: 4, y: 0, w: 4, h: 4 }
     query:
       version: 1
@@ -45,7 +45,7 @@ panels:
       query:
         agg: count
         filters: { path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion" }
-        group_by: ["model"]
+        group_by: ["product_class"]
     config:
       shape: donut
       labelPosition: outside
