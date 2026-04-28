@@ -34,11 +34,12 @@ panels:
     kind: text
     title: Welcome
     layout: { x: 0, y: 0, w: 12, h: 4 }
-    query:
-      version: 1
-      datasource: device_parameters
-      query:
-        agg: count
-        filters:
-          path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+    queries:
+      - refId: A
+        version: 1
+        datasource: device_parameters
+        query:
+          agg: count
+          filters:
+            path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
     config: { showSeriesCount: true }
