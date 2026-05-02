@@ -1,0 +1,21 @@
+# Profile for the cpe-labs TR-098 simulator
+# (github.com/herder-labs/cpe-labs, profile example-tr098-gateway).
+#
+# Matched on the synthetic ProductClass `GenericIGD` exposed by the
+# example-tr098-gateway profile so the same OpenACS dev stack can host
+# both genieacs-sim (dev-sim-tr098, OUI 202BC1) and the cpe-sim
+# alternate without either profile poaching the other.
+#
+# Includes all TR-098 mappings so provisioning seed scripts and
+# canonical→raw translation work end-to-end.
+name: cpe-sim-tr098
+priority: 100
+
+deviceSelector:
+  matchLabels:
+    productClass: "GenericIGD"
+
+parameterMappings:
+  - device-info-tr098
+  - mgmt-tr098
+  - diagnostics-tr098
