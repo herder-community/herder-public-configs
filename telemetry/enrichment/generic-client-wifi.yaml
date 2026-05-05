@@ -1,0 +1,20 @@
+# Generic per-client WiFi label enrichment.
+#
+# Walks standard TR-098 / TR-181 paths only — no vendor X_OUI_*
+# extensions. Emits the same wifi.client.{rssi,tx_rate,rx_rate}
+# metrics that the Arris vendor profile emits, so the bundled
+# tr098-wifi / tr181-wifi dashboards work out-of-the-box on any
+# CPE that ships those standard leaves (the cpe-labs simulators
+# and any baseline CPE without a vendor profile written for it).
+#
+# Selector: every TR-069/TR-369 device that the bundled telemetry
+# profiles already match (no manufacturer constraint). Priority 200
+# so any narrower vendor-specific rule (e.g. arris-client-wifi at
+# priority 50) wins by lower-priority-first resolver order.
+name: generic-client-wifi
+priority: 200
+deviceSelector:
+  matchExpressions:
+    - key: oui
+      operator: Exists
+script: generic-client-rssi-labels.ts

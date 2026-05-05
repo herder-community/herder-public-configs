@@ -1,0 +1,42 @@
+# Arris NVG578LX-class topology rule.
+#
+# Walks the X_0000C5_Wireless.HNC.HNE table:
+#   HNE.1 = gateway (Type=="Gateway")
+#   HNE.2+ = paired extenders
+# Backhaul links identified by the SSID name pattern in
+# config.backhaulSsidMatch (default "^bh"). Cross-refs Hosts.Host by
+# MAC for client metadata.
+#
+# Worked vendor-extension example demonstrating that proprietary path
+# semantics live entirely in operator-supplied script content (per
+# CLAUDE.md Architecture Principle #1).
+name: arris-hnc-topology
+priority: 100
+deviceSelector:
+  matchExpressions:
+    - key: manufacturer
+      operator: In
+      values: [Arris, ARRIS]
+
+triggerPaths:
+  - "InternetGatewayDevice.LANDevice.1.X_0000C5_Wireless.HNC.HNE.*"
+  - "InternetGatewayDevice.LANDevice.1.Hosts.Host.*"
+
+changeHash:
+  paths:
+    - "InternetGatewayDevice.LANDevice.1.X_0000C5_Wireless.HNC.HNE.*.MACAddress"
+    - "InternetGatewayDevice.LANDevice.1.X_0000C5_Wireless.HNC.HNE.*.Type"
+    - "InternetGatewayDevice.LANDevice.1.Hosts.Host.*.PhysAddress"
+
+coalesceWindow: 60s
+
+config:
+  # Regex matched against SSID name; matching SSIDs are treated as
+  # backhaul links between mesh nodes (not client-facing).
+  backhaulSsidMatch: "^bh"
+  # rssiEncoding: "rcpi" or "dbm". Arris firmware in the wild reports
+  # both depending on version.
+  rssiEncoding: dbm
+  includeInactiveHosts: false
+
+script: arris-hnc.ts

@@ -3,6 +3,6 @@ triggers:
   - first_contact
 deviceSelector: {}
 desired:
-  script: "scripts/first_contact.js"
+  script: "scripts/first_contact.ts"
 priority: 50
 enabled: true

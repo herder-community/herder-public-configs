@@ -5,13 +5,13 @@
 // device-native paths (TR-098/TR-181/vendor) automatically.
 
 // Fetch device info for parameter database population.
-var info = device.fetch("canonical.device.*");
+device.fetch("canonical.device.*");
 
 // Fetch management server config.
-var mgmt = device.fetch("canonical.mgmt.*");
+device.fetch("canonical.mgmt.*");
 
 // Set up connection request credentials (deterministic per device).
-var crUsername = device.oui + "-" + device.serial;
+const crUsername = device.oui + "-" + (device.serialNumber || "");
 device.set("canonical.mgmt.connection_request_username", crUsername);
 device.set("canonical.mgmt.connection_request_password", crUsername);
 
@@ -23,4 +23,4 @@ device.set("canonical.mgmt.periodic_inform_interval", 300);
 device.addTag("discovered");
 device.removeTag("undiscovered");
 
-provision.log("first contact complete for " + device.serial);
+provision.log("first contact complete for " + (device.serialNumber || "(unknown)"));

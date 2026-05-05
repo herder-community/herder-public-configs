@@ -1,0 +1,149 @@
+// arris-hnc.ts — topology emit for Arris NVG578LX-class devices.
+//
+// Walks the X_0000C5_Wireless.HNC.HNE vendor-extension tree:
+//   HNE.1 = gateway (Type=="Gateway")
+//   HNE.2+ = paired extenders
+// Identifies backhaul SSIDs by matching ctx.config.backhaulSsidMatch
+// (default "^bh") against the SSID name. Cross-refs Hosts.Host by MAC
+// for client metadata.
+//
+// Demonstrates how proprietary path semantics encode into the standard
+// emit shape — every emit goes through topology.add* helpers so the
+// labels stay schema-correct.
+
+(function () {
+  const backhaulPattern: string = ctx.configGet<string>("backhaulSsidMatch", "^bh");
+  const rssiEncoding: string = ctx.configGet<string>("rssiEncoding", "dbm");
+  const includeInactive: boolean = ctx.configGet<boolean>("includeInactiveHosts", false);
+
+  const backhaulRe = new RegExp(backhaulPattern);
+
+  // Step 1: host metadata by MAC for client emit cross-ref.
+  interface HostMeta { hostname: string; ipv4: string; }
+  const hostByMAC: Record<string, HostMeta> = {};
+  const hosts = batch.matches("InternetGatewayDevice.LANDevice.1.Hosts.Host.*");
+  for (let i = 0; i < hosts.length; i++) {
+    const h = hosts[i];
+    const mac = ((h.MACAddress as string | undefined) || "").toLowerCase();
+    if (!mac) continue;
+    if (!includeInactive && (h.Active as string | undefined) === "false") continue;
+    hostByMAC[mac] = {
+      hostname: (h.HostName as string | undefined) || "",
+      ipv4: (h.IPAddress as string | undefined) || "",
+    };
+  }
+
+  // Step 2: walk HNE entries → mesh nodes.
+  const hnes = batch.matches("InternetGatewayDevice.LANDevice.1.X_0000C5_Wireless.HNC.HNE.*");
+  if (hnes.length === 0) {
+    enrichment.warn("arris-hnc: no X_0000C5_Wireless.HNC.HNE entries found");
+    return;
+  }
+
+  // gatewayMAC = the HNE entry with Type=="Gateway".
+  let gatewayMAC: string | null = null;
+  const nodeByHNEIndex: Record<string, string> = {};
+  for (let i = 0; i < hnes.length; i++) {
+    const n = hnes[i];
+    const nodeMAC = ((n.MACAddress as string | undefined) || "").toLowerCase();
+    if (!nodeMAC) continue;
+    nodeByHNEIndex[n.$indexes.HNE] = nodeMAC;
+    if ((n.Type as string | undefined) === "Gateway") {
+      gatewayMAC = nodeMAC;
+    }
+  }
+
+  if (!gatewayMAC) {
+    enrichment.warn("arris-hnc: no HNE entry with Type=='Gateway'");
+    return;
+  }
+
+  for (let i = 0; i < hnes.length; i++) {
+    const n = hnes[i];
+    const nodeMAC = ((n.MACAddress as string | undefined) || "").toLowerCase();
+    if (!nodeMAC) continue;
+    const nodeType: "gateway" | "extender" = nodeMAC === gatewayMAC ? "gateway" : "extender";
+
+    topology.addNode({
+      id: nodeMAC,
+      type: nodeType,
+      managed_device_id: nodeType === "gateway" ? device.id : undefined,
+      manufacturer: device.manufacturer,
+      model: (n.Model as string | undefined) || undefined,
+      firmware: (n.SoftwareVersion as string | undefined) || undefined,
+      synced: nodeType === "extender" ? true : undefined,
+    });
+
+    // Backhaul edge to gateway: in the Arris tree, extenders link
+    // back to the gateway via the SSID matching backhaulPattern. For
+    // simplicity v1 always parents extenders to the gateway (no
+    // multi-hop mesh modeling) — operators with chained meshes
+    // override this script.
+    if (nodeType === "extender") {
+      topology.addEdge({
+        parent: gatewayMAC,
+        child: nodeMAC,
+        edge_type: "wifi_backhaul",
+      });
+    }
+  }
+
+  // Step 3: clients per HNE.{i}.Radio.{j}.SSID.{k}.STA.{l}. Skip
+  // backhaul-SSID stations — they're inter-node links, not clients.
+  const stations = batch.matches(
+    "InternetGatewayDevice.LANDevice.1.X_0000C5_Wireless.HNC.HNE.*.Radio.*.SSID.*.STA.*",
+  );
+  for (let i = 0; i < stations.length; i++) {
+    const s = stations[i];
+    const clientMAC = ((s.MACAddress as string | undefined) || "").toLowerCase();
+    if (!clientMAC) continue;
+
+    // Look up the SSID name for the parent SSID — skip backhaul.
+    const ssidNamePath = "InternetGatewayDevice.LANDevice.1.X_0000C5_Wireless.HNC.HNE." +
+      s.$indexes.HNE + ".Radio." + s.$indexes.Radio + ".SSID." + s.$indexes.SSID + ".SSID";
+    const ssidName = batch.params[ssidNamePath] || "";
+    if (backhaulRe.test(ssidName)) {
+      continue;
+    }
+
+    const parentMAC = nodeByHNEIndex[s.$indexes.HNE];
+    if (!parentMAC) continue;
+
+    const hostMeta = hostByMAC[clientMAC];
+    topology.addNode({
+      id: clientMAC,
+      type: "client",
+      hostname: hostMeta ? hostMeta.hostname : undefined,
+      ipv4: hostMeta ? hostMeta.ipv4 : undefined,
+    });
+
+    // Determine edge_type from radio band.
+    const bandPath = "InternetGatewayDevice.LANDevice.1.X_0000C5_Wireless.HNC.HNE." +
+      s.$indexes.HNE + ".Radio." + s.$indexes.Radio + ".OperatingFrequencyBand";
+    const band = batch.params[bandPath] || "";
+    let edgeType: "wifi_2g" | "wifi_5g" | "wifi_6g" = "wifi_5g";
+    if (band === "2.4GHz") edgeType = "wifi_2g";
+    else if (band === "6GHz") edgeType = "wifi_6g";
+
+    topology.addEdge({
+      parent: parentMAC,
+      child: clientMAC,
+      edge_type: edgeType,
+    });
+
+    // Per-edge RSSI metric.
+    const rssiRaw = s.RSSI as string | undefined;
+    if (rssiRaw !== undefined && rssiRaw !== "") {
+      let rssi = parseFloat(rssiRaw);
+      if (!isNaN(rssi)) {
+        if (rssiEncoding === "rcpi") {
+          rssi = (rssi / 2) - 110;
+        }
+        topology.addEdgeMetric("rssi_dbm", rssi, {
+          parent: parentMAC,
+          child: clientMAC,
+        });
+      }
+    }
+  }
+})();

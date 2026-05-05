@@ -5,11 +5,11 @@
 // device-native paths (TR-098/TR-181/vendor) automatically.
 
 // Refresh device info (firmware may have changed after reboot).
-var firmware = device.fetch("canonical.device.software_version");
-var hardware = device.fetch("canonical.device.hardware_version");
+const firmware = device.fetch("canonical.device.software_version");
+device.fetch("canonical.device.hardware_version");
 
 // Enforce connection request credentials.
-var crUsername = device.oui + "-" + device.serial;
+const crUsername = device.oui + "-" + (device.serialNumber || "");
 device.set("canonical.mgmt.connection_request_username", crUsername);
 device.set("canonical.mgmt.connection_request_password", crUsername);
 
@@ -20,4 +20,4 @@ device.set("canonical.mgmt.periodic_inform_interval", 300);
 // Tag device as recently booted (operators can track reboots).
 device.addTag("boot-seen");
 
-provision.log("boot check complete, firmware: " + firmware);
+provision.log("boot check complete, firmware: " + String(firmware));
