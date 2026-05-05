@@ -4,6 +4,6 @@ triggers:
   - connection_request
 deviceSelector: {}
 desired:
-  script: "scripts/periodic.js"
+  script: "scripts/periodic.ts"
 priority: 50
 enabled: true

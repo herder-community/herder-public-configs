@@ -3,6 +3,6 @@ triggers:
   - boot
 deviceSelector: {}
 desired:
-  script: "scripts/boot.js"
+  script: "scripts/boot.ts"
 priority: 50
 enabled: true

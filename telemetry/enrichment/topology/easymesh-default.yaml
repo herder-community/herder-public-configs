@@ -51,4 +51,4 @@ config:
   # gates client emission so disconnected clients drop out.
   includeInactiveHosts: false
 
-script: easymesh-default.js
+script: easymesh-default.ts

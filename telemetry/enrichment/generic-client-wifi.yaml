@@ -17,4 +17,4 @@ deviceSelector:
   matchExpressions:
     - key: oui
       operator: Exists
-script: generic-client-rssi-labels.js
+script: generic-client-rssi-labels.ts

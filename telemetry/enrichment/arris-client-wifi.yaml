@@ -29,4 +29,4 @@ deviceSelector:
     - key: manufacturer
       operator: In
       values: [Arris, ARRIS]
-script: arris-client-rssi-labels.js
+script: arris-client-rssi-labels.ts
