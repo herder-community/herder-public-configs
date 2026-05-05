@@ -37,24 +37,83 @@
   }
 
   // ---- Step 2: gateway = the managed CPE itself ----
-  let gatewayMAC = (
-    batch.params["Device.Ethernet.Interface.1.MACAddress"] || ""
-  ).toLowerCase();
-  if (!gatewayMAC) {
-    const serialTail = (device.serialNumber || "000000").slice(-6);
-    gatewayMAC = (device.oui + serialTail).toLowerCase()
-      .replace(/(.{2})(?=.)/g, "$1:").slice(0, 17);
+  //
+  // Walk the TR-181 paths that carry a real 6-byte MAC for "this
+  // gateway's identity", in priority order, stopping at the first
+  // valid MAC we find. NEVER synthesise — a synthetic MAC corrupts
+  // every downstream query (deep-link, history, replay), so when no
+  // proper TR-181 path resolves we emit no gateway and let the panel
+  // render an empty graph (the script still emits clients/extenders
+  // if they have valid MACs of their own).
+  //
+  // Priority chain, with TR-181 2.20.1 references:
+  //   1. Device.WiFi.DataElements.Network.ControllerID — canonical
+  //      EasyMesh controller identity, IEEE 1905 ALID (line 21779,
+  //      since TR-181 issue 2 amendment 13). The standards-track
+  //      replacement for the deleted Device.WiFi.MultiAP.* subtree.
+  //   2. Device.WiFi.DataElements.Network.Device.1.ID — colocated
+  //      agent's IEEE 1905 AL MAC (line 22129).
+  //   3. Device.Ethernet.Link.1.MACAddress — the higher-protocol
+  //      MAC used for outgoing packets (line 14516+). The Link.MAC
+  //      is what other devices on the LAN see as "this gateway",
+  //      whereas Interface.MAC is only the burned-in NIC.
+  //   4. Device.Ethernet.Interface.1.MACAddress — burned-in NIC MAC
+  //      (line 14141+); a last resort because production devices
+  //      may locally administer a different higher-layer MAC.
+  //
+  // The MAC validity test mirrors the assembler's CanonicalizeMAC:
+  // exactly 12 hex digits after stripping colons / dashes. Failing
+  // candidates are silently skipped so the chain can continue.
+  function isValidMAC(s: string): boolean {
+    const stripped = s.replace(/[:\-]/g, "");
+    return /^[0-9a-f]{12}$/i.test(stripped);
   }
 
-  topology.addNode({
-    id: gatewayMAC,
-    type: "gateway",
-    managed_device_id: device.id,
-    manufacturer: device.manufacturer,
-    model: device.model,
-    firmware: device.firmware,
-    serial: device.serialNumber,
-  });
+  const gatewayMACCandidates = [
+    batch.params["Device.WiFi.DataElements.Network.ControllerID"],
+    batch.params["Device.WiFi.DataElements.Network.Device.1.ID"],
+    batch.params["Device.Ethernet.Link.1.MACAddress"],
+    batch.params["Device.Ethernet.Interface.1.MACAddress"],
+  ];
+
+  let gatewayMAC = "";
+  for (let i = 0; i < gatewayMACCandidates.length; i++) {
+    const candidate = (gatewayMACCandidates[i] || "").trim();
+    if (candidate && isValidMAC(candidate)) {
+      gatewayMAC = candidate.toLowerCase();
+      break;
+    }
+  }
+
+  // Only emit a gateway node when the priority walk above resolved a
+  // real MAC. Without one, an empty graph is the correct output —
+  // never a synthetic id.
+  if (gatewayMAC) {
+    topology.addNode({
+      id: gatewayMAC,
+      type: "gateway",
+      managed_device_id: device.id,
+      manufacturer: device.manufacturer,
+      model: device.model,
+      firmware: device.firmware,
+      serial: device.serialNumber,
+    });
+  } else {
+    log(
+      "warn",
+      "topology: no canonical TR-181 MAC found for gateway " +
+        "(checked DataElements.Network.ControllerID, " +
+        "DataElements.Network.Device.1.ID, " +
+        "Ethernet.Link.1.MACAddress, Ethernet.Interface.1.MACAddress); " +
+        "skipping gateway node — empty topology will be returned",
+    );
+    // Without a gateway MAC every downstream emission would be an
+    // orphan or carry an empty parent string. Bail out so the
+    // assembler returns an empty graph (the panel renders an empty
+    // state, which is the correct UX for "device hasn't reported a
+    // resolvable identity yet").
+    return;
+  }
 
   // Helper: look up the band for a Device.WiFi.AccessPoint.{i}. The
   // SSIDReference points at Device.WiFi.SSID.{j}, which has
