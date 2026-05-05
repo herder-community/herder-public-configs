@@ -1,0 +1,30 @@
+# Fallback topology rule for TR-098-only devices that don't expose
+# EasyMesh DataElements. Walks InternetGatewayDevice.LANDevice.1.Hosts.Host.*
+# to emit a flat gateway + clients graph.
+#
+# No extender hierarchy — TR-098 doesn't carry one without vendor
+# extensions. Operators with vendor-specific mesh trees (Arris HNC,
+# Sagemcom equivalents) ship a per-vendor script (e.g., arris-hnc.js)
+# that takes precedence on those devices.
+name: tr098-hosts-only-topology
+priority: 50
+deviceSelector:
+  matchExpressions:
+    - key: dataModel:internetgatewaydevice
+      operator: Exists
+
+triggerPaths:
+  - "InternetGatewayDevice.LANDevice.1.Hosts.Host.*"
+
+changeHash:
+  paths:
+    - "InternetGatewayDevice.LANDevice.1.Hosts.Host.*.MACAddress"
+
+coalesceWindow: 60s
+
+config:
+  # includeInactiveHosts: when false (default), Active=false hosts drop
+  # out of the graph.
+  includeInactiveHosts: false
+
+script: tr098-hosts-only.js

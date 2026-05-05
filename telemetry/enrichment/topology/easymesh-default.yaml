@@ -1,0 +1,50 @@
+# Default topology rule for TR-181 / EasyMesh DataElements devices.
+#
+# Walks Device.WiFi.DataElements.Network.Device.{i}.* to assemble the
+# mesh node graph. Each Device entry is a node (gateway or extender);
+# MultiAPDevice.Backhaul.BackhaulDeviceID points at the parent mesh
+# node so the graph wires up directly without name-pattern hacks.
+#
+# Clients walk Radio.{j}.BSS.{k}.STA.{l} per radio. Hostname / IPv4 /
+# IPv6 cross-ref Device.Hosts.Host.* by MAC.
+#
+# RCPI normalization: SignalStrength is reported as RCPI in TR-181;
+# operators with dBm-reporting firmware override via
+# config.rssiEncoding=dbm.
+#
+# Cost: triggerPaths gates on the wifi/hosts subtree so unrelated
+# Informs skip the script entirely. changeHash on the structural
+# fields (BackhaulDeviceID + STA MAC list + Host MAC list) so
+# topology-irrelevant Inform churn collapses to skipped_unchanged.
+name: easymesh-topology-default
+priority: 100
+deviceSelector:
+  # dataModel:device is in the existing label set
+  # (provisioning.BuildProvisioningLabels) for any device that's been
+  # observed reporting Device.* paths. triggerPaths below narrows
+  # execution further to actual DataElements-bearing Informs.
+  matchExpressions:
+    - key: dataModel:device
+      operator: Exists
+
+triggerPaths:
+  - "Device.WiFi.DataElements.Network.Device.*"
+  - "Device.Hosts.Host.*"
+
+changeHash:
+  paths:
+    - "Device.WiFi.DataElements.Network.Device.*.MultiAPDevice.Backhaul.BackhaulDeviceID"
+    - "Device.WiFi.DataElements.Network.Device.*.Radio.*.BSS.*.STA.*.MACAddress"
+    - "Device.Hosts.Host.*.PhysAddress"
+
+coalesceWindow: 60s
+
+config:
+  # rssiEncoding: "rcpi" (default) or "dbm". RCPI converts via
+  # (RCPI/2) - 110.
+  rssiEncoding: rcpi
+  # includeInactiveHosts: when false (default), Hosts.Host.{j}.Active
+  # gates client emission so disconnected clients drop out of the graph.
+  includeInactiveHosts: false
+
+script: easymesh-default.js
