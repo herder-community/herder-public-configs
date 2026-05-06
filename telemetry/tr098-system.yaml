@@ -16,6 +16,10 @@
 # override on conflicting paths.
 name: tr098-system
 priority: 10
+deviceSelector:
+  matchExpressions:
+    - key: "dataModel:igd"
+      operator: Exists
 
 parameters:
   - path: "InternetGatewayDevice.DeviceInfo.HardwareVersion"

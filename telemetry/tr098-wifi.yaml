@@ -28,6 +28,10 @@
 # override on conflicting paths.
 name: tr098-wifi
 priority: 10
+deviceSelector:
+  matchExpressions:
+    - key: "dataModel:igd"
+      operator: Exists
 
 parameters:
   # --- Radio / SSID state ---
