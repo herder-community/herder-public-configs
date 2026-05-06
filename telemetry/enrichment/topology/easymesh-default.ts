@@ -46,6 +46,12 @@
   // render an empty graph (the script still emits clients/extenders
   // if they have valid MACs of their own).
   //
+  // The panel is on a per-device dashboard, so the device being
+  // viewed IS the gateway — the script just needs a stable 6-byte
+  // MAC to identify it as a graph node. Any MAC-bearing path defined
+  // by TR-181 for this device qualifies; we walk them in priority
+  // order:
+  //
   // Priority chain, with TR-181 2.20.1 references:
   //   1. Device.WiFi.DataElements.Network.ControllerID — canonical
   //      EasyMesh controller identity, IEEE 1905 ALID (line 21779,
@@ -58,8 +64,19 @@
   //      is what other devices on the LAN see as "this gateway",
   //      whereas Interface.MAC is only the burned-in NIC.
   //   4. Device.Ethernet.Interface.1.MACAddress — burned-in NIC MAC
-  //      (line 14141+); a last resort because production devices
-  //      may locally administer a different higher-layer MAC.
+  //      (line 14141+); production devices may locally administer
+  //      a different higher-layer MAC.
+  //   5. Device.WiFi.SSID.1.BSSID — TR-181 line 21858: "the MAC
+  //      address of the access point, which can either be local
+  //      (when this instance models an access point SSID)". For a
+  //      gateway, SSID.1 models a local access point, so BSSID is
+  //      the gateway's WiFi-side MAC. Always populated on TR-181
+  //      wifi gateways even when Ethernet/DataElements aren't.
+  //   6. Device.WiFi.SSID.1.MACAddress — equivalent to BSSID per
+  //      the same TR-181 object (line 21873): "If this instance
+  //      models an access point SSID, MACAddress is the same as
+  //      BSSID". Sibling fallback when only one of the pair is
+  //      reported by a given firmware.
   //
   // The MAC validity test mirrors the assembler's CanonicalizeMAC:
   // exactly 12 hex digits after stripping colons / dashes. Failing
@@ -74,6 +91,8 @@
     batch.params["Device.WiFi.DataElements.Network.Device.1.ID"],
     batch.params["Device.Ethernet.Link.1.MACAddress"],
     batch.params["Device.Ethernet.Interface.1.MACAddress"],
+    batch.params["Device.WiFi.SSID.1.BSSID"],
+    batch.params["Device.WiFi.SSID.1.MACAddress"],
   ];
 
   let gatewayMAC = "";
@@ -104,7 +123,8 @@
       "topology: no canonical TR-181 MAC found for gateway " +
         "(checked DataElements.Network.ControllerID, " +
         "DataElements.Network.Device.1.ID, " +
-        "Ethernet.Link.1.MACAddress, Ethernet.Interface.1.MACAddress); " +
+        "Ethernet.Link.1.MACAddress, Ethernet.Interface.1.MACAddress, " +
+        "WiFi.SSID.1.BSSID, WiFi.SSID.1.MACAddress); " +
         "skipping gateway node — empty topology will be returned",
     );
     // Without a gateway MAC every downstream emission would be an
