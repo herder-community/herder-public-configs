@@ -14,7 +14,15 @@
   const includeInactive: boolean = ctx.configGet<boolean>("includeInactiveHosts", false);
 
   // ---- Step 1: host metadata by MAC ----
-  interface HostMeta { hostname: string; ipv4: string; ipv6: string; }
+  // Captures hostname / IPv4 / IPv6 for cross-ref in steps 3 + 5,
+  // and the host's Layer1Interface so step 3.5 can identify wired
+  // (Device.Ethernet.*) clients vs wireless (Device.WiFi.*).
+  interface HostMeta {
+    hostname: string;
+    ipv4: string;
+    ipv6: string;
+    layer1: string;
+  }
   const hostByMAC: Record<string, HostMeta> = {};
   const hosts = batch.matches("Device.Hosts.Host.*");
   for (let i = 0; i < hosts.length; i++) {
@@ -33,8 +41,14 @@
       hostname: (h.HostName as string | undefined) || "",
       ipv4: (h.IPAddress as string | undefined) || "",
       ipv6: v6,
+      layer1: (h.Layer1Interface as string | undefined) || "",
     };
   }
+
+  // Track which client MACs have been emitted as topology nodes so
+  // the wired-host pass (step 3.5) doesn't double-emit clients
+  // already attached via WiFi.
+  const emittedClients: Record<string, boolean> = {};
 
   // ---- Step 2: gateway = the managed CPE itself ----
   //
@@ -183,6 +197,7 @@
       ipv4: hostMeta ? hostMeta.ipv4 : undefined,
       ipv6: hostMeta ? hostMeta.ipv6 : undefined,
     });
+    emittedClients[clientMAC] = true;
 
     const bssid = bssidForAP(apIdx);
     topology.addEdge({
@@ -205,6 +220,33 @@
         });
       }
     }
+  }
+
+  // ---- Step 3.5: wired clients (Device.Hosts.Host with Layer1Interface = Device.Ethernet.*) ----
+  // Hosts.Host carries every connected client regardless of medium.
+  // Step 3 above already emitted WiFi-associated clients; here we
+  // pick up the rest whose Layer1Interface points at an Ethernet
+  // subtree, attaching them to the gateway via an `ethernet` edge.
+  // Honours `includeInactiveHosts` via the same gate as Step 1.
+  for (const macKey in hostByMAC) {
+    if (emittedClients[macKey]) continue;
+    const hostMeta = hostByMAC[macKey];
+    if (!hostMeta.layer1.startsWith("Device.Ethernet")) continue;
+
+    topology.addNode({
+      id: macKey,
+      type: "client",
+      hostname: hostMeta.hostname || undefined,
+      ipv4: hostMeta.ipv4 || undefined,
+      ipv6: hostMeta.ipv6 || undefined,
+    });
+    emittedClients[macKey] = true;
+
+    topology.addEdge({
+      parent: gatewayMAC,
+      child: macKey,
+      edge_type: "ethernet",
+    });
   }
 
   // ---- Step 4: optional MultiAP extenders + their clients ----
