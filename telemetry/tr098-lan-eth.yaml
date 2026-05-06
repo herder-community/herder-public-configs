@@ -17,6 +17,10 @@
 # override on conflicting paths.
 name: tr098-lan-eth
 priority: 10
+deviceSelector:
+  matchExpressions:
+    - key: "dataModel:igd"
+      operator: Exists
 
 parameters:
   - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Status"

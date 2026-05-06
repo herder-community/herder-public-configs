@@ -50,7 +50,7 @@ panels:
       Live tree of devices on this CPE's network, with per-edge link
       metrics (RSSI by default; the panel options can switch to any
       vendor-emitted metric).
-    layout: { x: 0, y: 0, w: 12, h: 8 }
+    layout: { x: 0, y: 0, w: 12, h: 16 }
     queries:
       - refId: A
         version: 1

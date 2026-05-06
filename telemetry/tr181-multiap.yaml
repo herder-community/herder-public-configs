@@ -18,6 +18,11 @@ parameters:
     interval: 0
   - path: "Device.WiFi.MultiAP.APDevice.*.SoftwareVersion"
     interval: 0
+  # Backhaul link RSSI from this extender to its parent controller
+  # (the gateway). Used by the topology enrichment script to colour
+  # the gateway→extender edge by signal strength.
+  - path: "Device.WiFi.MultiAP.APDevice.*.SignalStrength"
+    interval: 0
   - path: "Device.WiFi.MultiAP.APDevice.*.Radio.*.Enable"
     interval: 0
   - path: "Device.WiFi.MultiAP.APDevice.*.Radio.*.OperatingFrequencyBand"

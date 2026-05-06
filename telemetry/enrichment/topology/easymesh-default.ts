@@ -363,6 +363,26 @@
       child: apMAC,
       edge_type: "wifi_backhaul",
     });
+
+    // Backhaul RSSI — when the CPE reports it, colour the gateway→
+    // extender edge by signal strength so a degraded backhaul shows
+    // amber/red on the panel instead of inheriting the type colour.
+    // Without this attachment the edge has no metric and the overlay
+    // falls back to the static "wifi_backhaul" type tone, hiding the
+    // most operationally interesting signal in the mesh path.
+    const backhaulRssiStr = ap.SignalStrength as string | undefined;
+    if (backhaulRssiStr !== undefined && backhaulRssiStr !== "") {
+      let backhaulRssi = parseFloat(backhaulRssiStr);
+      if (!isNaN(backhaulRssi)) {
+        if (rssiEncoding === "rcpi") {
+          backhaulRssi = (backhaulRssi / 2) - 110;
+        }
+        topology.addEdgeMetric("rssi_dbm", backhaulRssi, {
+          parent: gatewayMAC,
+          child: apMAC,
+        });
+      }
+    }
   }
 
   // Walk APDevice.{i}.Radio.{j}.AP.{k} and emit an `ssid` node per
