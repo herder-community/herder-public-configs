@@ -178,8 +178,88 @@
     return (batch.params["Device.WiFi.SSID." + m[1] + ".BSSID"] || "").toLowerCase();
   }
 
-  // ---- Step 3: flat-AP clients (Device.WiFi.AccessPoint.*.AssociatedDevice.*) ----
-  // Clients here associate directly with the gateway's own radios.
+  // ---- Step 3a: SSID nodes (Device.WiFi.SSID.*) ----
+  // Each VAP becomes an `ssid` intermediate node (id = BSSID, MAC-
+  // typed). WiFi clients attach to their SSID parent rather than
+  // straight to the gateway, giving the panel a Unifi-style tree
+  // grouping by SSID + band.
+  interface SsidMeta { bssid: string; name: string; band: string; radioIdx: string; }
+  const ssidByIdx: Record<string, SsidMeta> = {};
+  const ssidEntries = batch.matches("Device.WiFi.SSID.*");
+  for (let i = 0; i < ssidEntries.length; i++) {
+    const s = ssidEntries[i];
+    const ssidIdx = s.$indexes.SSID;
+    const bssid = ((s.BSSID as string | undefined) || "").toLowerCase();
+    if (!bssid) continue;
+    const ssidName = (s.SSID as string | undefined) || "";
+    const lowerLayers = (s.LowerLayers as string | undefined) || "";
+    const radioMatch = lowerLayers.match(/Device\.WiFi\.Radio\.(\d+)/);
+    const radioIdx = radioMatch ? radioMatch[1] : "";
+    const bandRaw = radioIdx
+      ? (batch.params["Device.WiFi.Radio." + radioIdx + ".OperatingFrequencyBand"] || "")
+      : "";
+    let band = "5GHz";
+    if (bandRaw === "2.4GHz") band = "2.4GHz";
+    else if (bandRaw === "6GHz") band = "6GHz";
+
+    ssidByIdx[ssidIdx] = { bssid, name: ssidName, band, radioIdx };
+    topology.addNode({
+      id: bssid,
+      type: "ssid",
+      hostname: ssidName,
+      properties: { name: ssidName, band, radio_idx: radioIdx },
+    });
+    topology.addEdge({
+      parent: gatewayMAC,
+      child: bssid,
+      edge_type: bandToEdgeType(band),
+      bssid: bssid,
+    });
+  }
+
+  function bandToEdgeType(band: string): "wifi_2g" | "wifi_5g" | "wifi_6g" {
+    if (band === "2.4GHz") return "wifi_2g";
+    if (band === "6GHz") return "wifi_6g";
+    return "wifi_5g";
+  }
+
+  function ssidForAP(apIdx: string): SsidMeta | null {
+    const ssidRef = batch.params["Device.WiFi.AccessPoint." + apIdx + ".SSIDReference"] || "";
+    const m = ssidRef.match(/Device\.WiFi\.SSID\.(\d+)/);
+    if (!m) return null;
+    return ssidByIdx[m[1]] || null;
+  }
+
+  // ---- Step 3b: Ethernet interface nodes (Device.Ethernet.Interface.*) ----
+  // Each ethernet port becomes an `interface` node (id = port MAC).
+  // Wired clients attach to the port their Layer1Interface points at.
+  interface IfaceMeta { mac: string; name: string; path: string; }
+  const ifaceByPath: Record<string, IfaceMeta> = {};
+  const ethIfaces = batch.matches("Device.Ethernet.Interface.*");
+  for (let i = 0; i < ethIfaces.length; i++) {
+    const ifaceEntry = ethIfaces[i];
+    const ifaceIdx = ifaceEntry.$indexes.Interface;
+    const ifaceMac = ((ifaceEntry.MACAddress as string | undefined) || "").toLowerCase();
+    if (!ifaceMac) continue;
+    const ifaceName = (ifaceEntry.Name as string | undefined) || ("eth" + ifaceIdx);
+    const ifacePath = "Device.Ethernet.Interface." + ifaceIdx;
+    ifaceByPath[ifacePath] = { mac: ifaceMac, name: ifaceName, path: ifacePath };
+    topology.addNode({
+      id: ifaceMac,
+      type: "interface",
+      hostname: ifaceName,
+      properties: { name: ifaceName, path: ifacePath },
+    });
+    topology.addEdge({
+      parent: gatewayMAC,
+      child: ifaceMac,
+      edge_type: "ethernet",
+    });
+  }
+
+  // ---- Step 4 (renamed from old Step 3): WiFi-associated clients
+  // Each AP's AssociatedDevice list — clients edge to their SSID
+  // parent (not to the gateway directly).
   const flatStations = batch.matches(
     "Device.WiFi.AccessPoint.*.AssociatedDevice.*",
   );
@@ -189,6 +269,10 @@
     if (!clientMAC) continue;
 
     const apIdx = s.$indexes.AccessPoint;
+    const ssidMeta = ssidForAP(apIdx);
+    const parentNodeId = ssidMeta ? ssidMeta.bssid : gatewayMAC;
+    const edgeType = ssidMeta ? bandToEdgeType(ssidMeta.band) : "wifi_5g";
+
     const hostMeta = hostByMAC[clientMAC];
     topology.addNode({
       id: clientMAC,
@@ -199,12 +283,11 @@
     });
     emittedClients[clientMAC] = true;
 
-    const bssid = bssidForAP(apIdx);
     topology.addEdge({
-      parent: gatewayMAC,
+      parent: parentNodeId,
       child: clientMAC,
-      edge_type: edgeTypeForAP(apIdx),
-      bssid: bssid || undefined,
+      edge_type: edgeType,
+      bssid: ssidMeta ? ssidMeta.bssid : undefined,
     });
 
     const sigStr = s.SignalStrength as string | undefined;
@@ -215,23 +298,24 @@
           rssi = (rssi / 2) - 110;
         }
         topology.addEdgeMetric("rssi_dbm", rssi, {
-          parent: gatewayMAC,
+          parent: parentNodeId,
           child: clientMAC,
         });
       }
     }
   }
 
-  // ---- Step 3.5: wired clients (Device.Hosts.Host with Layer1Interface = Device.Ethernet.*) ----
-  // Hosts.Host carries every connected client regardless of medium.
-  // Step 3 above already emitted WiFi-associated clients; here we
-  // pick up the rest whose Layer1Interface points at an Ethernet
-  // subtree, attaching them to the gateway via an `ethernet` edge.
-  // Honours `includeInactiveHosts` via the same gate as Step 1.
+  // ---- Step 5: wired clients (Hosts.Host with Layer1Interface = Device.Ethernet.*)
+  // Each wired client attaches to the actual interface node, falling
+  // back to the gateway when the interface isn't in the parameter
+  // tree (e.g. firmware that omits Device.Ethernet entirely).
   for (const macKey in hostByMAC) {
     if (emittedClients[macKey]) continue;
     const hostMeta = hostByMAC[macKey];
     if (!hostMeta.layer1.startsWith("Device.Ethernet")) continue;
+
+    const ifaceMeta = ifaceByPath[hostMeta.layer1];
+    const parentNodeId = ifaceMeta ? ifaceMeta.mac : gatewayMAC;
 
     topology.addNode({
       id: macKey,
@@ -243,14 +327,19 @@
     emittedClients[macKey] = true;
 
     topology.addEdge({
-      parent: gatewayMAC,
+      parent: parentNodeId,
       child: macKey,
       edge_type: "ethernet",
     });
   }
 
-  // ---- Step 4: optional MultiAP extenders + their clients ----
-  // Skipped silently when the device doesn't expose MultiAP.
+  // ---- Step 6: MultiAP extenders + their per-AP SSIDs + clients ----
+  // Tree shape per extender:
+  //   gateway → extender (wifi_backhaul edge)
+  //   extender → ssid (one per Radio.{j}.AP.{k}, edge typed by the
+  //                    radio's band)
+  //   ssid → mesh-client (typed by the same band, RSSI overlay
+  //                       attached to this edge)
   const extenderByIndex: Record<string, string> = {};
   const apDevices = batch.matches("Device.WiFi.MultiAP.APDevice.*");
   for (let i = 0; i < apDevices.length; i++) {
@@ -276,6 +365,48 @@
     });
   }
 
+  // Walk APDevice.{i}.Radio.{j}.AP.{k} and emit an `ssid` node per
+  // entry, parented to the extender. Track BSSID → ssid-node-id so
+  // mesh-stations below can attach to the right parent.
+  interface MeshSsidMeta { bssid: string; band: string; ssid: string; }
+  const meshSsidByLoc: Record<string, MeshSsidMeta> = {};
+  const meshAPs = batch.matches(
+    "Device.WiFi.MultiAP.APDevice.*.Radio.*.AP.*",
+  );
+  for (let i = 0; i < meshAPs.length; i++) {
+    const apEntry = meshAPs[i];
+    const apIdx = apEntry.$indexes.APDevice;
+    const radioIdx = apEntry.$indexes.Radio;
+    const apEntryIdx = apEntry.$indexes.AP;
+    const parentExtender = extenderByIndex[apIdx];
+    if (!parentExtender) continue;
+
+    const bssid = ((apEntry.BSSID as string | undefined) || "").toLowerCase();
+    if (!bssid) continue;
+    const ssidName = (apEntry.SSID as string | undefined) || "";
+
+    const bandPath = "Device.WiFi.MultiAP.APDevice." + apIdx +
+      ".Radio." + radioIdx + ".OperatingFrequencyBand";
+    const bandRaw = batch.params[bandPath] || "";
+    let band = "5GHz";
+    if (bandRaw === "2.4GHz") band = "2.4GHz";
+    else if (bandRaw === "6GHz") band = "6GHz";
+
+    meshSsidByLoc[apIdx + "/" + radioIdx + "/" + apEntryIdx] = { bssid, band, ssid: ssidName };
+    topology.addNode({
+      id: bssid,
+      type: "ssid",
+      hostname: ssidName,
+      properties: { name: ssidName, band, location: "extender:" + apIdx },
+    });
+    topology.addEdge({
+      parent: parentExtender,
+      child: bssid,
+      edge_type: bandToEdgeType(band),
+      bssid: bssid,
+    });
+  }
+
   const meshStations = batch.matches(
     "Device.WiFi.MultiAP.APDevice.*.Radio.*.AP.*.AssociatedDevice.*",
   );
@@ -287,19 +418,11 @@
     const apIdx = s.$indexes.APDevice;
     const radioIdx = s.$indexes.Radio;
     const apEntryIdx = s.$indexes.AP;
-    const parentMAC = extenderByIndex[apIdx];
-    if (!parentMAC) continue;
-
-    const bandPath = "Device.WiFi.MultiAP.APDevice." + apIdx +
-      ".Radio." + radioIdx + ".OperatingFrequencyBand";
-    const band = batch.params[bandPath] || "";
-    let meshEdgeType: WifiEdgeType = "wifi_5g";
-    if (band === "2.4GHz") meshEdgeType = "wifi_2g";
-    else if (band === "6GHz") meshEdgeType = "wifi_6g";
-
-    const bssidPath = "Device.WiFi.MultiAP.APDevice." + apIdx +
-      ".Radio." + radioIdx + ".AP." + apEntryIdx + ".BSSID";
-    const meshBSSID = (batch.params[bssidPath] || "").toLowerCase();
+    const meshSsid = meshSsidByLoc[apIdx + "/" + radioIdx + "/" + apEntryIdx];
+    const parentExtender = extenderByIndex[apIdx];
+    if (!parentExtender && !meshSsid) continue;
+    const parentNodeId = meshSsid ? meshSsid.bssid : (parentExtender as string);
+    const meshEdgeType = meshSsid ? bandToEdgeType(meshSsid.band) : "wifi_5g";
 
     const hostMeta = hostByMAC[clientMAC];
     topology.addNode({
@@ -311,10 +434,10 @@
     });
 
     topology.addEdge({
-      parent: parentMAC,
+      parent: parentNodeId,
       child: clientMAC,
       edge_type: meshEdgeType,
-      bssid: meshBSSID || undefined,
+      bssid: meshSsid ? meshSsid.bssid : undefined,
     });
 
     const sigStr = s.SignalStrength as string | undefined;
@@ -325,7 +448,7 @@
           rssi = (rssi / 2) - 110;
         }
         topology.addEdgeMetric("rssi_dbm", rssi, {
-          parent: parentMAC,
+          parent: parentNodeId,
           child: clientMAC,
         });
       }

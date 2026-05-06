@@ -64,8 +64,5 @@ panels:
           - { at: -90, color: "var(--chart-5)" }
           - { at: -70, color: "var(--chart-4)" }
           - { at: -55, color: "var(--chart-2)" }
-      layout:
-        leafGapPx: 96
-        levelGapPx: 110
       showLegend: true
       enableDeepLink: true
