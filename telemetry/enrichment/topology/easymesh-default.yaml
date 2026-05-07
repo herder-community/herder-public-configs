@@ -30,7 +30,18 @@ deviceSelector:
       operator: Exists
 
 triggerPaths:
-  - "Device.WiFi.AccessPoint.*"
+  # WORKAROUND for the multi-event-per-session race: cwmp publishes
+  # a single CPE session as several telemetry events (small periodic
+  # Inform first, then the 250-leaf GPV batch). The periodic Inform
+  # carries `Device.WiFi.AccessPoint.{i}.AssociatedDeviceNumberOfEntries`
+  # which would match a `Device.WiFi.AccessPoint.*` trigger — the
+  # script then runs against an event that doesn't carry the gateway
+  # anchors it needs, bails at "no canonical TR-181 MAC", commits
+  # gate state, and the immediately-following GPV-results event is
+  # coalesce-skipped. Topology never emits.
+  # Gating only on paths that appear EXCLUSIVELY in the GPV batch
+  # (MultiAP.APDevice.* and Hosts.Host.*) routes the script to the
+  # right event. Long-term fix tracked separately.
   - "Device.WiFi.MultiAP.APDevice.*"
   - "Device.Hosts.Host.*"
 
