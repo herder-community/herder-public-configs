@@ -1,0 +1,37 @@
+# Baseline identity enrichment for TR-369 / USP agents.
+# Ships with OpenACS at priority 10; operators layer vendor-specific
+# profiles at priority 50+ by convention. See
+# context/specs/224-identity-enrichment-profiles/ for the full design
+# of the identity-enrichment runtime, and #529 for the USP-specific
+# story this profile ships under.
+#
+# USP devices report TR-181 paths exclusively (no `InternetGatewayDevice.*`
+# legacy IGD namespace, since USP is post-TR-098). The CWMP-side companion
+# profile `tr069-standard-identity.yaml` carries the IGD fallbacks for
+# legacy CPEs; this profile is TR-181-only.
+#
+# OnBoardRequest's explicit OUI/Serial/ProductClass fields are extracted
+# upstream by `backend/internal/usp/server/notify.go` and populate the
+# device row directly — they do NOT flow through this enrichment profile.
+# This file's job is to fill `firmwareVersion` / `manufacturer` / `model`
+# / `productClass` from the standard `Device.DeviceInfo.*` paths that any
+# USP agent reports as part of its data model.
+name: usp-deviceinfo
+priority: 10
+description: |
+  Baseline identity enrichment for any TR-369 / USP agent reporting the
+  standard TR-181 `Device.DeviceInfo.*` subtree. Operators add vendor
+  overrides at higher priority to handle non-standard `X_VENDOR_*` paths.
+enrichments:
+  - attribute: firmwareVersion
+    sources:
+      - Device.DeviceInfo.SoftwareVersion
+  - attribute: manufacturer
+    sources:
+      - Device.DeviceInfo.Manufacturer
+  - attribute: model
+    sources:
+      - Device.DeviceInfo.ModelName
+  - attribute: productClass
+    sources:
+      - Device.DeviceInfo.ProductClass
