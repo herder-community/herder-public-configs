@@ -1,0 +1,78 @@
+# USP real-time analytics baseline profile.
+#
+# Ships the day-one push-subscription set that every TR-181 USP device
+# gets configured with on first contact. The reconciler (#575) creates
+# matching `Device.LocalAgent.Subscription.{i}.` rows on the agent;
+# subscribed events then stream into the platform autonomously, no
+# polling, no Connection Requests.
+#
+# **Subscription set** (locked in #566 spec-discuss):
+#
+#   * ObjectCreation + ObjectDeletion on
+#     `Device.WiFi.AccessPoint.*.AssociatedDevice.` — every client
+#     associate / disassociate produces a `device_parameters` row +
+#     eviction within seconds. This is the analytics differentiator
+#     vs polled-ACS competitors.
+#
+#   * ValueChange on:
+#       - `Device.WiFi.SSID.*.Status`  — interface up/down events
+#       - `Device.WiFi.SSID.*.Enable`  — operator-visible SSID toggle
+#       - `Device.WiFi.SSID.*.SSID`    — SSID rename detection
+#       - `Device.WiFi.Radio.*.Status` — radio state (DFS hits, link
+#                                       bounce, channel hop)
+#       - `Device.WiFi.AccessPoint.*.AssociatedDevice.*.AuthenticationState`
+#                                       — per-client auth state flips
+#                                       (associated → authenticated,
+#                                       deauth, etc)
+#
+# **Deliberate exclusions** (do not add without amendment):
+#
+#   * `AssociatedDevice.*.SignalStrength` — most agents declare
+#     `VALUE_CHANGE_WILL_IGNORE` on RSSI without vendor threshold
+#     configuration. Subscribing produces nothing. Revisit when a real
+#     fleet surfaces vendor configs that honor it.
+#
+#   * Byte counters (`Stats.BytesSent` / `BytesReceived`) — agents
+#     ignore VC on counters too. Polled-fallback for these lives in
+#     #578 (controller-side cron Get).
+#
+#   * Vendor extension events (`X_VENDOR_*`) — operator-authored
+#     vendor profiles at priority 50+ extend this baseline; this file
+#     stays vendor-neutral.
+#
+# **Selector**: `protocol:usp` (per #568) AND `dataModel:device`
+# (per #321). Only TR-181 USP devices match. Operators wanting strict
+# per-vendor scoping ship higher-priority profiles; same-priority
+# distinct-name profiles produce independent agent rows because
+# Story A's SubscriptionID hash includes the profile name.
+#
+# **Priority 10**: baseline tier. Operator vendor profiles at 50+ add
+# alongside; the reconciler emits independent agent rows for each
+# distinct (profile-name, notif-type, reference-list) tuple.
+
+name: usp-wifi-realtime
+priority: 10
+deviceSelector:
+  matchExpressions:
+    - key: "protocol:usp"
+      operator: Exists
+    - key: "dataModel:device"
+      operator: Exists
+
+subscriptions:
+  # Client lifecycle — the killer feature.
+  - notifType: ObjectCreation
+    referenceList:
+      - Device.WiFi.AccessPoint.*.AssociatedDevice.
+  - notifType: ObjectDeletion
+    referenceList:
+      - Device.WiFi.AccessPoint.*.AssociatedDevice.
+
+  # WiFi state changes.
+  - notifType: ValueChange
+    referenceList:
+      - Device.WiFi.SSID.*.Status
+      - Device.WiFi.SSID.*.Enable
+      - Device.WiFi.SSID.*.SSID
+      - Device.WiFi.Radio.*.Status
+      - Device.WiFi.AccessPoint.*.AssociatedDevice.*.AuthenticationState
