@@ -32,6 +32,10 @@ mappings:
     valueType: unsignedint
     devicePath: Device.ManagementServer.PeriodicInformInterval
 
+  - canonical: canonical.mgmt.periodic_inform_time
+    valueType: datetime
+    devicePath: Device.ManagementServer.PeriodicInformTime
+
   - canonical: canonical.mgmt.url
     valueType: string
     devicePath: Device.ManagementServer.URL
