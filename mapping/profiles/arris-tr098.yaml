@@ -3,23 +3,25 @@
 # Arris NVG residential gateways use the InternetGatewayDevice data model.
 # Matched by OUI + product class. Operators should add more product classes
 # as they onboard additional Arris models.
-name: arris-nvg-tr098
-priority: 50
-
-deviceSelector:
-  matchLabels:
-    oui: "0000C5"
-  matchExpressions:
-    - key: productClass
-      operator: In
-      values:
-        - "NVG578LX"
-        - "NVG448BQ"
-        - "NVG468MQ"
-        - "NVG589"
-        - "NVG599"
-
-parameterMappings:
-  - device-info-tr098
-  - mgmt-tr098
-  - diagnostics-tr098
+apiVersion: mapping.herder.io/v1alpha1
+kind: MappingProfile
+metadata:
+  name: arris-nvg-tr098
+spec:
+  priority: 50
+  deviceSelector:
+    matchLabels:
+      oui: "0000C5"
+    matchExpressions:
+      - key: productClass
+        operator: In
+        values:
+          - "NVG578LX"
+          - "NVG448BQ"
+          - "NVG468MQ"
+          - "NVG589"
+          - "NVG599"
+  parameterMappings:
+    - device-info-tr098
+    - mgmt-tr098
+    - diagnostics-tr098

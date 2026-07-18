@@ -2,14 +2,16 @@
 #
 # Matches the sim's OUI 202BC1. Includes all TR-098 mappings so
 # provisioning seed scripts work end-to-end in dev.
-name: dev-sim-tr098
-priority: 100
-
-deviceSelector:
-  matchLabels:
-    oui: "202BC1"
-
-parameterMappings:
-  - device-info-tr098
-  - mgmt-tr098
-  - diagnostics-tr098
+apiVersion: mapping.herder.io/v1alpha1
+kind: MappingProfile
+metadata:
+  name: dev-sim-tr098
+spec:
+  priority: 100
+  deviceSelector:
+    matchLabels:
+      oui: "202BC1"
+  parameterMappings:
+    - device-info-tr098
+    - mgmt-tr098
+    - diagnostics-tr098

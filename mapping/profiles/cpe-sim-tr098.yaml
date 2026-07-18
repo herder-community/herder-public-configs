@@ -8,14 +8,16 @@
 #
 # Includes all TR-098 mappings so provisioning seed scripts and
 # canonical→raw translation work end-to-end.
-name: cpe-sim-tr098
-priority: 100
-
-deviceSelector:
-  matchLabels:
-    productClass: "GenericIGD"
-
-parameterMappings:
-  - device-info-tr098
-  - mgmt-tr098
-  - diagnostics-tr098
+apiVersion: mapping.herder.io/v1alpha1
+kind: MappingProfile
+metadata:
+  name: cpe-sim-tr098
+spec:
+  priority: 100
+  deviceSelector:
+    matchLabels:
+      productClass: "GenericIGD"
+  parameterMappings:
+    - device-info-tr098
+    - mgmt-tr098
+    - diagnostics-tr098

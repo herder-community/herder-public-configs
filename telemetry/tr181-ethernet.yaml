@@ -18,23 +18,26 @@
 #
 # Priority 10 — operator-shipped vendor profiles (typical priority 50+)
 # override on conflicting paths.
-name: tr181-ethernet
-priority: 10
-deviceSelector:
-  matchExpressions:
-    - key: "dataModel:device"
-      operator: Exists
-
-parameters:
-  - path: "Device.Ethernet.Interface.*.Status"
-    interval: 0
-  - path: "Device.Ethernet.Interface.*.Upstream"
-    interval: 0
-  - path: "Device.Ethernet.Interface.*.MACAddress"
-    interval: 0
-  - path: "Device.Ethernet.Interface.*.LowerLayers"
-    interval: 0
-  - path: "Device.Ethernet.Interface.*.Stats.BytesSent"
-    interval: 0
-  - path: "Device.Ethernet.Interface.*.Stats.BytesReceived"
-    interval: 0
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr181-ethernet
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:device"
+        operator: Exists
+  parameters:
+    - path: "Device.Ethernet.Interface.*.Status"
+      interval: 0
+    - path: "Device.Ethernet.Interface.*.Upstream"
+      interval: 0
+    - path: "Device.Ethernet.Interface.*.MACAddress"
+      interval: 0
+    - path: "Device.Ethernet.Interface.*.LowerLayers"
+      interval: 0
+    - path: "Device.Ethernet.Interface.*.Stats.BytesSent"
+      interval: 0
+    - path: "Device.Ethernet.Interface.*.Stats.BytesReceived"
+      interval: 0

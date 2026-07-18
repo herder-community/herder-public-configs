@@ -6,13 +6,15 @@
 #
 # Includes the TR-181 device-info and mgmt mappings so provisioning
 # seed scripts and canonical→raw translation work end-to-end.
-name: cpe-sim-tr181
-priority: 100
-
-deviceSelector:
-  matchLabels:
-    productClass: "GenericGateway"
-
-parameterMappings:
-  - device-info-tr181
-  - mgmt-tr181
+apiVersion: mapping.herder.io/v1alpha1
+kind: MappingProfile
+metadata:
+  name: cpe-sim-tr181
+spec:
+  priority: 100
+  deviceSelector:
+    matchLabels:
+      productClass: "GenericGateway"
+  parameterMappings:
+    - device-info-tr181
+    - mgmt-tr181

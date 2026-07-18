@@ -29,30 +29,32 @@
 #
 # Priority 10 — operator-shipped vendor profiles (typical priority 50+)
 # override on conflicting paths.
-name: tr181-hosts
-priority: 10
-deviceSelector:
-  matchExpressions:
-    - key: "dataModel:device"
-      operator: Exists
-
-parameters:
-  # --- Table cardinality ---
-  - path: "Device.Hosts.HostNumberOfEntries"
-    interval: 0
-
-  # --- Per-host fields (TR-181 spellings) ---
-  - path: "Device.Hosts.Host.*.Active"
-    interval: 0
-  - path: "Device.Hosts.Host.*.HostName"
-    interval: 0
-  - path: "Device.Hosts.Host.*.IPAddress"
-    interval: 0
-  - path: "Device.Hosts.Host.*.PhysAddress"
-    interval: 0
-  - path: "Device.Hosts.Host.*.AddressSource"
-    interval: 0
-  - path: "Device.Hosts.Host.*.Layer1Interface"
-    interval: 0
-  - path: "Device.Hosts.Host.*.Layer3Interface"
-    interval: 0
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr181-hosts
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:device"
+        operator: Exists
+  parameters:
+    # --- Table cardinality ---
+    - path: "Device.Hosts.HostNumberOfEntries"
+      interval: 0
+    # --- Per-host fields (TR-181 spellings) ---
+    - path: "Device.Hosts.Host.*.Active"
+      interval: 0
+    - path: "Device.Hosts.Host.*.HostName"
+      interval: 0
+    - path: "Device.Hosts.Host.*.IPAddress"
+      interval: 0
+    - path: "Device.Hosts.Host.*.PhysAddress"
+      interval: 0
+    - path: "Device.Hosts.Host.*.AddressSource"
+      interval: 0
+    - path: "Device.Hosts.Host.*.Layer1Interface"
+      interval: 0
+    - path: "Device.Hosts.Host.*.Layer3Interface"
+      interval: 0

@@ -22,11 +22,15 @@
 # Selector matches CPE whose manufacturer string is "Arris" or "ARRIS" —
 # firmware reports either across the product family. OUI not constrained
 # (the X_0000C5_* paths are self-selecting).
-name: arris-client-wifi
-priority: 50
-deviceSelector:
-  matchExpressions:
-    - key: manufacturer
-      operator: In
-      values: [Arris, ARRIS]
-script: arris-client-rssi-labels.ts
+apiVersion: telemetry.herder.io/v1alpha1
+kind: EnrichmentRule
+metadata:
+  name: arris-client-wifi
+spec:
+  priority: 50
+  deviceSelector:
+    matchExpressions:
+      - key: manufacturer
+        operator: In
+        values: [Arris, ARRIS]
+  script: arris-client-rssi-labels.ts

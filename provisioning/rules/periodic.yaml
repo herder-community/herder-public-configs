@@ -1,9 +1,13 @@
-name: seed-periodic
-triggers:
-  - periodic
-  - connection_request
-deviceSelector: {}
-desired:
-  script: "scripts/periodic.ts"
-priority: 50
-enabled: true
+apiVersion: provisioning.herder.io/v1alpha1
+kind: ProvisioningRule
+metadata:
+  name: seed-periodic
+spec:
+  triggers:
+    - periodic
+    - connection_request
+  deviceSelector: {}
+  desired:
+    script: "provisioning/scripts/periodic.ts"
+  priority: 50
+  enabled: true

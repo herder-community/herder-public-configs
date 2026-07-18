@@ -11,10 +11,14 @@
 # profiles already match (no manufacturer constraint). Priority 200
 # so any narrower vendor-specific rule (e.g. arris-client-wifi at
 # priority 50) wins by lower-priority-first resolver order.
-name: generic-client-wifi
-priority: 200
-deviceSelector:
-  matchExpressions:
-    - key: oui
-      operator: Exists
-script: generic-client-rssi-labels.ts
+apiVersion: telemetry.herder.io/v1alpha1
+kind: EnrichmentRule
+metadata:
+  name: generic-client-wifi
+spec:
+  priority: 200
+  deviceSelector:
+    matchExpressions:
+      - key: oui
+        operator: Exists
+  script: generic-client-rssi-labels.ts

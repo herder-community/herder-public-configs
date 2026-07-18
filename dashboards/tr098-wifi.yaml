@@ -5,203 +5,206 @@
 #
 # Selector: TR-098 devices, identified by the `dataModel:igd` exists
 # expression. Same scoping convention as tr098-overview.yaml.
-schemaVersion: 1
-name: tr098-wifi
-title: WiFi
-description: |
-  Per-client WiFi signal strength, active client counts, and cumulative
-  steering-event counters per client. One line per associated client MAC.
-deviceSelector:
-  matchExpressions:
-    - { key: "dataModel:igd", operator: Exists }
-defaultTimeRange:
-  from: { kind: relative, expr: "now-1h" }
-  to: { kind: relative, expr: "now" }
-defaultRefreshIntervalMs: 60000
-panels:
-  - id: panel-rssi
-    kind: line
-    title: Client signal strength (RSSI)
-    layout: { x: 0, y: 0, w: 12, h: 6 }
-    queries:
-      - refId: A
-        version: 1
-        datasource: telemetry_history_labeled
-        query:
-          agg: avg
-          filters:
-            metric: wifi.client.rssi
-          group_by: ["labels.client_mac"]
-    config:
-      showPoints: false
-      interpolation: monotone
-      yAxis: { kind: fixed, min: -100, max: -20 }
-      unit: " dBm"
-      legend:
-        displayMode: table
-        placement: right
-        calcs: [last, mean, min, max]
-  # Per-band RSSI radars (#434). One radar each for 2.4 / 5 / 6 GHz.
-  # Each is a polar snapshot of every client currently associated on
-  # that band, painted against operator-defined threshold rings (good
-  # / OK / average / bad / critical). The radar is band-agnostic —
-  # band scoping is purely the per-panel query's label_filters
-  # (`band == "2.4GHz"` etc.). Sits alongside the line chart above so
-  # operators get both at-a-glance bucketing AND time-series history.
-  - id: panel-rssi-radar-2_4ghz
-    kind: radar
-    title: WiFi 2.4 GHz client signals
-    layout: { x: 0, y: 6, w: 4, h: 6 }
-    queries:
-      - refId: A
-        version: 1
-        datasource: telemetry_history_labeled
-        query:
-          agg: last
-          filters:
-            metric: wifi.client.rssi
-            label_filters:
-              - { key: band, op: eq, value: "2.4GHz" }
-          group_by: ["labels.client_mac"]
-    config:
-      domain: { min: -100, max: -20 }
-      thresholds:
-        - { at: -100, color: "#ef4444", label: "Critical" }
-        - { at: -85,  color: "#f97316", label: "Bad" }
-        - { at: -75,  color: "#eab308", label: "Average" }
-        - { at: -65,  color: "#84cc16", label: "OK" }
-        - { at: -50,  color: "#22c55e", label: "Great" }
-      thresholdAlpha: 0.28
-      unit: " dBm"
-      defaultIcon: Wifi
-      clientIcons: {}
-      showLegend: true
-      maxAxes: 24
-      truncationMode: "worst-n"
-  - id: panel-rssi-radar-5ghz
-    kind: radar
-    title: WiFi 5 GHz client signals
-    layout: { x: 4, y: 6, w: 4, h: 6 }
-    queries:
-      - refId: A
-        version: 1
-        datasource: telemetry_history_labeled
-        query:
-          agg: last
-          filters:
-            metric: wifi.client.rssi
-            label_filters:
-              - { key: band, op: eq, value: "5GHz" }
-          group_by: ["labels.client_mac"]
-    config:
-      domain: { min: -100, max: -20 }
-      thresholds:
-        - { at: -100, color: "#ef4444", label: "Critical" }
-        - { at: -85,  color: "#f97316", label: "Bad" }
-        - { at: -75,  color: "#eab308", label: "Average" }
-        - { at: -65,  color: "#84cc16", label: "OK" }
-        - { at: -50,  color: "#22c55e", label: "Great" }
-      thresholdAlpha: 0.28
-      unit: " dBm"
-      defaultIcon: Wifi
-      clientIcons: {}
-      showLegend: true
-      maxAxes: 24
-      truncationMode: "worst-n"
-  - id: panel-rssi-radar-6ghz
-    kind: radar
-    title: WiFi 6 GHz client signals
-    layout: { x: 8, y: 6, w: 4, h: 6 }
-    queries:
-      - refId: A
-        version: 1
-        datasource: telemetry_history_labeled
-        query:
-          agg: last
-          filters:
-            metric: wifi.client.rssi
-            label_filters:
-              - { key: band, op: eq, value: "6GHz" }
-          group_by: ["labels.client_mac"]
-    config:
-      domain: { min: -100, max: -20 }
-      thresholds:
-        - { at: -100, color: "#ef4444", label: "Critical" }
-        - { at: -85,  color: "#f97316", label: "Bad" }
-        - { at: -75,  color: "#eab308", label: "Average" }
-        - { at: -65,  color: "#84cc16", label: "OK" }
-        - { at: -50,  color: "#22c55e", label: "Great" }
-      thresholdAlpha: 0.28
-      unit: " dBm"
-      defaultIcon: Wifi
-      clientIcons: {}
-      showLegend: true
-      maxAxes: 24
-      truncationMode: "worst-n"
-  - id: panel-clients-by-band
-    # Re-anchored from y=6 to y=12 to make room for the three radars above.
-    # (the original Active WiFi clients panel below was at y=6 — bumped down.)
-    kind: line
-    title: Active WiFi clients
-    layout: { x: 0, y: 12, w: 12, h: 4 }
-    queries:
-      - refId: A
-        version: 1
-        datasource: telemetry_history_labeled
-        query:
-          agg: count
-          filters:
-            metric: wifi.client.rssi
-    config:
-      showPoints: false
-      interpolation: step
-      yAxis: { kind: auto }
-      unit: null
-      legend:
-        displayMode: hidden
-        placement: bottom
-        calcs: []
-  - id: panel-self-steer
-    kind: line
-    title: Cumulative self-steer count per client
-    layout: { x: 0, y: 16, w: 6, h: 5 }
-    queries:
-      - refId: A
-        version: 1
-        datasource: telemetry_history_labeled
-        query:
-          agg: last
-          filters:
-            metric: wifi.client.self_steer_count
-          group_by: ["labels.client_mac"]
-    config:
-      showPoints: false
-      interpolation: monotone
-      yAxis: { kind: auto }
-      unit: null
-      legend:
-        displayMode: table
-        placement: bottom
-        calcs: [last, max]
-  - id: panel-steering-unfriendly
-    kind: line
-    title: Steering-unfriendly events per client
-    layout: { x: 6, y: 16, w: 6, h: 5 }
-    queries:
-      - refId: A
-        version: 1
-        datasource: telemetry_history_labeled
-        query:
-          agg: last
-          filters:
-            metric: wifi.client.steering_unfriendly
-          group_by: ["labels.client_mac"]
-    config:
-      showPoints: false
-      interpolation: monotone
-      yAxis: { kind: auto }
-      unit: null
-      legend:
-        displayMode: table
-        placement: bottom
-        calcs: [last, max]
+apiVersion: dashboards.herder.io/v1alpha1
+kind: Dashboard
+metadata:
+  name: tr098-wifi
+spec:
+  title: WiFi
+  description: |
+    Per-client WiFi signal strength, active client counts, and cumulative
+    steering-event counters per client. One line per associated client MAC.
+  deviceSelector:
+    matchExpressions:
+      - {key: "dataModel:igd", operator: Exists}
+  defaultTimeRange:
+    from: {kind: relative, expr: "now-1h"}
+    to: {kind: relative, expr: "now"}
+  defaultRefreshIntervalMs: 60000
+  panels:
+    - id: panel-rssi
+      kind: line
+      title: Client signal strength (RSSI)
+      layout: {x: 0, y: 0, w: 12, h: 6}
+      queries:
+        - refId: A
+          version: 1
+          datasource: telemetry_history_labeled
+          query:
+            agg: avg
+            filters:
+              metric: wifi.client.rssi
+            group_by: ["labels.client_mac"]
+      config:
+        showPoints: false
+        interpolation: monotone
+        yAxis: {kind: fixed, min: -100, max: -20}
+        unit: " dBm"
+        legend:
+          displayMode: table
+          placement: right
+          calcs: [last, mean, min, max]
+    # Per-band RSSI radars (#434). One radar each for 2.4 / 5 / 6 GHz.
+    # Each is a polar snapshot of every client currently associated on
+    # that band, painted against operator-defined threshold rings (good
+    # / OK / average / bad / critical). The radar is band-agnostic —
+    # band scoping is purely the per-panel query's label_filters
+    # (`band == "2.4GHz"` etc.). Sits alongside the line chart above so
+    # operators get both at-a-glance bucketing AND time-series history.
+    - id: panel-rssi-radar-2_4ghz
+      kind: radar
+      title: WiFi 2.4 GHz client signals
+      layout: {x: 0, y: 6, w: 4, h: 6}
+      queries:
+        - refId: A
+          version: 1
+          datasource: telemetry_history_labeled
+          query:
+            agg: last
+            filters:
+              metric: wifi.client.rssi
+              label_filters:
+                - {key: band, op: eq, value: "2.4GHz"}
+            group_by: ["labels.client_mac"]
+      config:
+        domain: {min: -100, max: -20}
+        thresholds:
+          - {at: -100, color: "#ef4444", label: "Critical"}
+          - {at: -85, color: "#f97316", label: "Bad"}
+          - {at: -75, color: "#eab308", label: "Average"}
+          - {at: -65, color: "#84cc16", label: "OK"}
+          - {at: -50, color: "#22c55e", label: "Great"}
+        thresholdAlpha: 0.28
+        unit: " dBm"
+        defaultIcon: Wifi
+        clientIcons: {}
+        showLegend: true
+        maxAxes: 24
+        truncationMode: "worst-n"
+    - id: panel-rssi-radar-5ghz
+      kind: radar
+      title: WiFi 5 GHz client signals
+      layout: {x: 4, y: 6, w: 4, h: 6}
+      queries:
+        - refId: A
+          version: 1
+          datasource: telemetry_history_labeled
+          query:
+            agg: last
+            filters:
+              metric: wifi.client.rssi
+              label_filters:
+                - {key: band, op: eq, value: "5GHz"}
+            group_by: ["labels.client_mac"]
+      config:
+        domain: {min: -100, max: -20}
+        thresholds:
+          - {at: -100, color: "#ef4444", label: "Critical"}
+          - {at: -85, color: "#f97316", label: "Bad"}
+          - {at: -75, color: "#eab308", label: "Average"}
+          - {at: -65, color: "#84cc16", label: "OK"}
+          - {at: -50, color: "#22c55e", label: "Great"}
+        thresholdAlpha: 0.28
+        unit: " dBm"
+        defaultIcon: Wifi
+        clientIcons: {}
+        showLegend: true
+        maxAxes: 24
+        truncationMode: "worst-n"
+    - id: panel-rssi-radar-6ghz
+      kind: radar
+      title: WiFi 6 GHz client signals
+      layout: {x: 8, y: 6, w: 4, h: 6}
+      queries:
+        - refId: A
+          version: 1
+          datasource: telemetry_history_labeled
+          query:
+            agg: last
+            filters:
+              metric: wifi.client.rssi
+              label_filters:
+                - {key: band, op: eq, value: "6GHz"}
+            group_by: ["labels.client_mac"]
+      config:
+        domain: {min: -100, max: -20}
+        thresholds:
+          - {at: -100, color: "#ef4444", label: "Critical"}
+          - {at: -85, color: "#f97316", label: "Bad"}
+          - {at: -75, color: "#eab308", label: "Average"}
+          - {at: -65, color: "#84cc16", label: "OK"}
+          - {at: -50, color: "#22c55e", label: "Great"}
+        thresholdAlpha: 0.28
+        unit: " dBm"
+        defaultIcon: Wifi
+        clientIcons: {}
+        showLegend: true
+        maxAxes: 24
+        truncationMode: "worst-n"
+    - id: panel-clients-by-band
+      # Re-anchored from y=6 to y=12 to make room for the three radars above.
+      # (the original Active WiFi clients panel below was at y=6 — bumped down.)
+      kind: line
+      title: Active WiFi clients
+      layout: {x: 0, y: 12, w: 12, h: 4}
+      queries:
+        - refId: A
+          version: 1
+          datasource: telemetry_history_labeled
+          query:
+            agg: count
+            filters:
+              metric: wifi.client.rssi
+      config:
+        showPoints: false
+        interpolation: step
+        yAxis: {kind: auto}
+        unit: null
+        legend:
+          displayMode: hidden
+          placement: bottom
+          calcs: []
+    - id: panel-self-steer
+      kind: line
+      title: Cumulative self-steer count per client
+      layout: {x: 0, y: 16, w: 6, h: 5}
+      queries:
+        - refId: A
+          version: 1
+          datasource: telemetry_history_labeled
+          query:
+            agg: last
+            filters:
+              metric: wifi.client.self_steer_count
+            group_by: ["labels.client_mac"]
+      config:
+        showPoints: false
+        interpolation: monotone
+        yAxis: {kind: auto}
+        unit: null
+        legend:
+          displayMode: table
+          placement: bottom
+          calcs: [last, max]
+    - id: panel-steering-unfriendly
+      kind: line
+      title: Steering-unfriendly events per client
+      layout: {x: 6, y: 16, w: 6, h: 5}
+      queries:
+        - refId: A
+          version: 1
+          datasource: telemetry_history_labeled
+          query:
+            agg: last
+            filters:
+              metric: wifi.client.steering_unfriendly
+            group_by: ["labels.client_mac"]
+      config:
+        showPoints: false
+        interpolation: monotone
+        yAxis: {kind: auto}
+        unit: null
+        legend:
+          displayMode: table
+          placement: bottom
+          calcs: [last, max]

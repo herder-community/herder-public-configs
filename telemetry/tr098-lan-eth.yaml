@@ -15,19 +15,22 @@
 #
 # Priority 10 — operator-shipped vendor profiles (typical priority 50+)
 # override on conflicting paths.
-name: tr098-lan-eth
-priority: 10
-deviceSelector:
-  matchExpressions:
-    - key: "dataModel:igd"
-      operator: Exists
-
-parameters:
-  - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Status"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.MACAddress"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesSent"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesReceived"
-    interval: 0
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr098-lan-eth
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:igd"
+        operator: Exists
+  parameters:
+    - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Status"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.MACAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesSent"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesReceived"
+      interval: 0

@@ -20,38 +20,38 @@
 #
 # Priority 10 — operator-shipped vendor profiles (typical priority 50+)
 # override on conflicting paths.
-name: tr098-lan-hosts
-priority: 10
-deviceSelector:
-  matchExpressions:
-    - key: "dataModel:igd"
-      operator: Exists
-
-parameters:
-  # --- Table cardinality ---
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.HostNumberOfEntries"
-    interval: 0
-
-  # --- Per-host fields ---
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.Active"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.HostName"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPAddress"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.MACAddress"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.AddressSource"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.InterfaceType"
-    interval: 0
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.Layer2Interface"
-    interval: 0
-
-  # --- IPv6: legacy scalar form (older TR-098 variants) ---
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPv6Address"
-    interval: 0
-
-  # --- IPv6: modern instance-table form ---
-  - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPv6Address.*.IPAddress"
-    interval: 0
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr098-lan-hosts
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:igd"
+        operator: Exists
+  parameters:
+    # --- Table cardinality ---
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.HostNumberOfEntries"
+      interval: 0
+    # --- Per-host fields ---
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.Active"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.HostName"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.MACAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.AddressSource"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.InterfaceType"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.Layer2Interface"
+      interval: 0
+    # --- IPv6: legacy scalar form (older TR-098 variants) ---
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPv6Address"
+      interval: 0
+    # --- IPv6: modern instance-table form ---
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPv6Address.*.IPAddress"
+      interval: 0
