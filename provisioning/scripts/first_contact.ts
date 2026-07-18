@@ -32,7 +32,7 @@ for (var i = 0; i < serial.length; i++) {
 // matters; the date part is arbitrary and may be in the past.
 var mm = Math.floor(phase / 60);
 var ss = phase % 60;
-function pad2(n) { return (n < 10 ? "0" : "") + n; }
+function pad2(n: number) { return (n < 10 ? "0" : "") + n; }
 device.set("canonical.mgmt.periodic_inform_enable", true);
 device.set("canonical.mgmt.periodic_inform_interval", informInterval);
 device.set(

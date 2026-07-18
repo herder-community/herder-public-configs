@@ -1,23 +1,27 @@
-name: tr069-standard-identity
-priority: 10
-description: |
-  Baseline identity enrichment for any TR-069 Inform-speaking CPE.
-  Operators add vendor overrides at higher priority to handle
-  non-standard X_VENDOR paths.
-enrichments:
-  - attribute: firmwareVersion
-    sources:
-      - Device.DeviceInfo.SoftwareVersion
-      - InternetGatewayDevice.DeviceInfo.SoftwareVersion
-  - attribute: model
-    sources:
-      - Device.DeviceInfo.ModelName
-      - InternetGatewayDevice.DeviceInfo.ModelName
-  - attribute: productClass
-    sources:
-      - Device.DeviceInfo.ProductClass
-      - InternetGatewayDevice.DeviceInfo.ProductClass
-  - attribute: manufacturer
-    sources:
-      - Device.DeviceInfo.Manufacturer
-      - InternetGatewayDevice.DeviceInfo.Manufacturer
+apiVersion: identity.herder.io/v1alpha1
+kind: IdentityProfile
+metadata:
+  name: tr069-standard-identity
+spec:
+  priority: 10
+  description: |
+    Baseline identity enrichment for any TR-069 Inform-speaking CPE.
+    Operators add vendor overrides at higher priority to handle
+    non-standard X_VENDOR paths.
+  enrichments:
+    - attribute: firmwareVersion
+      sources:
+        - Device.DeviceInfo.SoftwareVersion
+        - InternetGatewayDevice.DeviceInfo.SoftwareVersion
+    - attribute: model
+      sources:
+        - Device.DeviceInfo.ModelName
+        - InternetGatewayDevice.DeviceInfo.ModelName
+    - attribute: productClass
+      sources:
+        - Device.DeviceInfo.ProductClass
+        - InternetGatewayDevice.DeviceInfo.ProductClass
+    - attribute: manufacturer
+      sources:
+        - Device.DeviceInfo.Manufacturer
+        - InternetGatewayDevice.DeviceInfo.Manufacturer

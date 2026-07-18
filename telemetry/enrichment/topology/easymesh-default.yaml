@@ -18,48 +18,47 @@
 # Informs skip the script entirely. changeHash on structural fields
 # (APDevice MACs, AssociatedDevice MACs, Hosts MAC list) so
 # topology-irrelevant Inform churn collapses to skipped_unchanged.
-name: easymesh-topology-default
-priority: 100
-deviceSelector:
-  # dataModel:device is in the existing label set
-  # (provisioning.BuildProvisioningLabels) for any device observed
-  # reporting Device.* paths. triggerPaths below narrows execution to
-  # actual MultiAP-bearing Informs.
-  matchExpressions:
-    - key: dataModel:device
-      operator: Exists
-
-triggerPaths:
-  # WORKAROUND for the multi-event-per-session race: cwmp publishes
-  # a single CPE session as several telemetry events (small periodic
-  # Inform first, then the 250-leaf GPV batch). The periodic Inform
-  # carries `Device.WiFi.AccessPoint.{i}.AssociatedDeviceNumberOfEntries`
-  # which would match a `Device.WiFi.AccessPoint.*` trigger — the
-  # script then runs against an event that doesn't carry the gateway
-  # anchors it needs, bails at "no canonical TR-181 MAC", commits
-  # gate state, and the immediately-following GPV-results event is
-  # coalesce-skipped. Topology never emits.
-  # Gating only on paths that appear EXCLUSIVELY in the GPV batch
-  # (MultiAP.APDevice.* and Hosts.Host.*) routes the script to the
-  # right event. Long-term fix tracked separately.
-  - "Device.WiFi.MultiAP.APDevice.*"
-  - "Device.Hosts.Host.*"
-
-changeHash:
-  paths:
-    - "Device.WiFi.AccessPoint.*.AssociatedDevice.*.MACAddress"
-    - "Device.WiFi.MultiAP.APDevice.*.MACAddress"
-    - "Device.WiFi.MultiAP.APDevice.*.Radio.*.AP.*.AssociatedDevice.*.MACAddress"
-    - "Device.Hosts.Host.*.PhysAddress"
-
-coalesceWindow: 60s
-
-config:
-  # rssiEncoding: "dbm" (default for MultiAP) or "rcpi". RCPI converts
-  # via (RCPI/2) - 110.
-  rssiEncoding: dbm
-  # includeInactiveHosts: when false (default), Hosts.Host.{j}.Active
-  # gates client emission so disconnected clients drop out.
-  includeInactiveHosts: false
-
-script: easymesh-default.ts
+apiVersion: telemetry.herder.io/v1alpha1
+kind: EnrichmentRule
+metadata:
+  name: easymesh-topology-default
+spec:
+  priority: 100
+  deviceSelector:
+    # dataModel:device is in the existing label set
+    # (provisioning.BuildProvisioningLabels) for any device observed
+    # reporting Device.* paths. triggerPaths below narrows execution to
+    # actual MultiAP-bearing Informs.
+    matchExpressions:
+      - key: dataModel:device
+        operator: Exists
+  triggerPaths:
+    # WORKAROUND for the multi-event-per-session race: cwmp publishes
+    # a single CPE session as several telemetry events (small periodic
+    # Inform first, then the 250-leaf GPV batch). The periodic Inform
+    # carries `Device.WiFi.AccessPoint.{i}.AssociatedDeviceNumberOfEntries`
+    # which would match a `Device.WiFi.AccessPoint.*` trigger — the
+    # script then runs against an event that doesn't carry the gateway
+    # anchors it needs, bails at "no canonical TR-181 MAC", commits
+    # gate state, and the immediately-following GPV-results event is
+    # coalesce-skipped. Topology never emits.
+    # Gating only on paths that appear EXCLUSIVELY in the GPV batch
+    # (MultiAP.APDevice.* and Hosts.Host.*) routes the script to the
+    # right event. Long-term fix tracked separately.
+    - "Device.WiFi.MultiAP.APDevice.*"
+    - "Device.Hosts.Host.*"
+  changeHash:
+    paths:
+      - "Device.WiFi.AccessPoint.*.AssociatedDevice.*.MACAddress"
+      - "Device.WiFi.MultiAP.APDevice.*.MACAddress"
+      - "Device.WiFi.MultiAP.APDevice.*.Radio.*.AP.*.AssociatedDevice.*.MACAddress"
+      - "Device.Hosts.Host.*.PhysAddress"
+  coalesceWindow: 60s
+  config:
+    # rssiEncoding: "dbm" (default for MultiAP) or "rcpi". RCPI converts
+    # via (RCPI/2) - 110.
+    rssiEncoding: dbm
+    # includeInactiveHosts: when false (default), Hosts.Host.{j}.Active
+    # gates client emission so disconnected clients drop out.
+    includeInactiveHosts: false
+  script: easymesh-default.ts

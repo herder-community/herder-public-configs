@@ -22,32 +22,33 @@
 #
 # Priority 10 — operator-shipped vendor profiles (typical priority 50+)
 # override on conflicting paths.
-name: tr181-ip
-priority: 10
-deviceSelector:
-  matchExpressions:
-    - key: "dataModel:device"
-      operator: Exists
-
-parameters:
-  # --- IP.Interface state ---
-  - path: "Device.IP.Interface.*.Enable"
-    interval: 0
-  - path: "Device.IP.Interface.*.Status"
-    interval: 0
-  - path: "Device.IP.Interface.*.Type"
-    interval: 0
-  - path: "Device.IP.Interface.*.LowerLayers"
-    interval: 0
-
-  # --- IPv4 addresses ---
-  - path: "Device.IP.Interface.*.IPv4Address.*.IPAddress"
-    interval: 0
-  - path: "Device.IP.Interface.*.IPv4Address.*.SubnetMask"
-    interval: 0
-
-  # --- IPv6 addresses ---
-  - path: "Device.IP.Interface.*.IPv6Address.*.IPAddress"
-    interval: 0
-  - path: "Device.IP.Interface.*.IPv6Address.*.Origin"
-    interval: 0
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr181-ip
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:device"
+        operator: Exists
+  parameters:
+    # --- IP.Interface state ---
+    - path: "Device.IP.Interface.*.Enable"
+      interval: 0
+    - path: "Device.IP.Interface.*.Status"
+      interval: 0
+    - path: "Device.IP.Interface.*.Type"
+      interval: 0
+    - path: "Device.IP.Interface.*.LowerLayers"
+      interval: 0
+    # --- IPv4 addresses ---
+    - path: "Device.IP.Interface.*.IPv4Address.*.IPAddress"
+      interval: 0
+    - path: "Device.IP.Interface.*.IPv4Address.*.SubnetMask"
+      interval: 0
+    # --- IPv6 addresses ---
+    - path: "Device.IP.Interface.*.IPv6Address.*.IPAddress"
+      interval: 0
+    - path: "Device.IP.Interface.*.IPv6Address.*.Origin"
+      interval: 0

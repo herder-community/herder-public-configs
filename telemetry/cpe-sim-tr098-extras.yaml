@@ -6,12 +6,15 @@
 # X_<VENDOR>_SignalStrength extension. The lab simulator emits it on
 # the standard SignalStrength path, so add it here scoped to the
 # simulator's ProductClass to keep the generic profile clean.
-name: cpe-sim-tr098-extras
-priority: 50
-deviceSelector:
-  matchLabels:
-    productClass: "GenericIGD"
-
-parameters:
-  - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.SignalStrength"
-    interval: 0
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: cpe-sim-tr098-extras
+spec:
+  priority: 50
+  deviceSelector:
+    matchLabels:
+      productClass: "GenericIGD"
+  parameters:
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.SignalStrength"
+      interval: 0

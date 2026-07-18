@@ -1,8 +1,12 @@
-name: seed-boot
-triggers:
-  - boot
-deviceSelector: {}
-desired:
-  script: "scripts/boot.ts"
-priority: 50
-enabled: true
+apiVersion: provisioning.herder.io/v1alpha1
+kind: ProvisioningRule
+metadata:
+  name: seed-boot
+spec:
+  triggers:
+    - boot
+  deviceSelector: {}
+  desired:
+    script: "provisioning/scripts/boot.ts"
+  priority: 50
+  enabled: true

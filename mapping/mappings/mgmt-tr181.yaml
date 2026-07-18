@@ -1,49 +1,42 @@
 # Canonical → TR-181 management server mappings.
 #
 # Same canonical paths as mgmt-tr098, mapped to Device.* tree.
-name: mgmt-tr181
-
-mappings:
-  - canonical: canonical.mgmt.connection_request_url
-    valueType: string
-    devicePath: Device.ManagementServer.ConnectionRequestURL
-
-  - canonical: canonical.mgmt.connection_request_username
-    valueType: string
-    devicePath: Device.ManagementServer.ConnectionRequestUsername
-
-  - canonical: canonical.mgmt.connection_request_password
-    valueType: string
-    devicePath: Device.ManagementServer.ConnectionRequestPassword
-
-  - canonical: canonical.mgmt.username
-    valueType: string
-    devicePath: Device.ManagementServer.Username
-
-  - canonical: canonical.mgmt.password
-    valueType: string
-    devicePath: Device.ManagementServer.Password
-
-  - canonical: canonical.mgmt.periodic_inform_enable
-    valueType: boolean
-    devicePath: Device.ManagementServer.PeriodicInformEnable
-
-  - canonical: canonical.mgmt.periodic_inform_interval
-    valueType: unsignedint
-    devicePath: Device.ManagementServer.PeriodicInformInterval
-
-  - canonical: canonical.mgmt.periodic_inform_time
-    valueType: datetime
-    devicePath: Device.ManagementServer.PeriodicInformTime
-
-  - canonical: canonical.mgmt.url
-    valueType: string
-    devicePath: Device.ManagementServer.URL
-
-  - canonical: canonical.mgmt.parameter_key
-    valueType: string
-    devicePath: Device.ManagementServer.ParameterKey
-
-  - canonical: canonical.mgmt.provisioning_code
-    valueType: string
-    devicePath: Device.DeviceInfo.ProvisioningCode
+apiVersion: mapping.herder.io/v1alpha1
+kind: MappingTable
+metadata:
+  name: mgmt-tr181
+spec:
+  mappings:
+    - canonical: canonical.mgmt.connection_request_url
+      valueType: string
+      devicePath: Device.ManagementServer.ConnectionRequestURL
+    - canonical: canonical.mgmt.connection_request_username
+      valueType: string
+      devicePath: Device.ManagementServer.ConnectionRequestUsername
+    - canonical: canonical.mgmt.connection_request_password
+      valueType: string
+      devicePath: Device.ManagementServer.ConnectionRequestPassword
+    - canonical: canonical.mgmt.username
+      valueType: string
+      devicePath: Device.ManagementServer.Username
+    - canonical: canonical.mgmt.password
+      valueType: string
+      devicePath: Device.ManagementServer.Password
+    - canonical: canonical.mgmt.periodic_inform_enable
+      valueType: boolean
+      devicePath: Device.ManagementServer.PeriodicInformEnable
+    - canonical: canonical.mgmt.periodic_inform_interval
+      valueType: unsignedint
+      devicePath: Device.ManagementServer.PeriodicInformInterval
+    - canonical: canonical.mgmt.periodic_inform_time
+      valueType: datetime
+      devicePath: Device.ManagementServer.PeriodicInformTime
+    - canonical: canonical.mgmt.url
+      valueType: string
+      devicePath: Device.ManagementServer.URL
+    - canonical: canonical.mgmt.parameter_key
+      valueType: string
+      devicePath: Device.ManagementServer.ParameterKey
+    - canonical: canonical.mgmt.provisioning_code
+      valueType: string
+      devicePath: Device.DeviceInfo.ProvisioningCode

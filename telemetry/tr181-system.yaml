@@ -16,40 +16,40 @@
 #
 # Priority 10 — operator-shipped vendor profiles (typical priority 50+)
 # override on conflicting paths.
-name: tr181-system
-priority: 10
-deviceSelector:
-  matchExpressions:
-    - key: "dataModel:device"
-      operator: Exists
-
-parameters:
-  - path: "Device.DeviceInfo.HardwareVersion"
-    interval: 0
-  - path: "Device.DeviceInfo.SoftwareVersion"
-    interval: 0
-  - path: "Device.DeviceInfo.UpTime"
-    interval: 0
-
-  # --- MemoryStatus (TR-181 §DeviceInfo.MemoryStatus) ---
-  # Total/Free in KB. Memory-usage dashboards compute
-  # (Total - Free) / Total * 100 with NULLIF on the denominator to
-  # survive firmware that reports Total=0.
-  - path: "Device.DeviceInfo.MemoryStatus.Total"
-    interval: 0
-  - path: "Device.DeviceInfo.MemoryStatus.Free"
-    interval: 0
-
-  # --- ProcessStatus (TR-181 §DeviceInfo.ProcessStatus) ---
-  # CPUUsage is a percentage (0-100) averaged across CPUs.
-  - path: "Device.DeviceInfo.ProcessStatus.CPUUsage"
-    interval: 0
-
-  # --- TemperatureStatus (firmware-dependent; wildcard-safe if absent) ---
-  # Name is operator-facing label; Value in °C; Status is Enabled/Disabled/Error.
-  - path: "Device.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Name"
-    interval: 0
-  - path: "Device.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Value"
-    interval: 0
-  - path: "Device.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Status"
-    interval: 0
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr181-system
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:device"
+        operator: Exists
+  parameters:
+    - path: "Device.DeviceInfo.HardwareVersion"
+      interval: 0
+    - path: "Device.DeviceInfo.SoftwareVersion"
+      interval: 0
+    - path: "Device.DeviceInfo.UpTime"
+      interval: 0
+    # --- MemoryStatus (TR-181 §DeviceInfo.MemoryStatus) ---
+    # Total/Free in KB. Memory-usage dashboards compute
+    # (Total - Free) / Total * 100 with NULLIF on the denominator to
+    # survive firmware that reports Total=0.
+    - path: "Device.DeviceInfo.MemoryStatus.Total"
+      interval: 0
+    - path: "Device.DeviceInfo.MemoryStatus.Free"
+      interval: 0
+    # --- ProcessStatus (TR-181 §DeviceInfo.ProcessStatus) ---
+    # CPUUsage is a percentage (0-100) averaged across CPUs.
+    - path: "Device.DeviceInfo.ProcessStatus.CPUUsage"
+      interval: 0
+    # --- TemperatureStatus (firmware-dependent; wildcard-safe if absent) ---
+    # Name is operator-facing label; Value in °C; Status is Enabled/Disabled/Error.
+    - path: "Device.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Name"
+      interval: 0
+    - path: "Device.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Value"
+      interval: 0
+    - path: "Device.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Status"
+      interval: 0

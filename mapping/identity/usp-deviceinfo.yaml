@@ -16,22 +16,26 @@
 # This file's job is to fill `firmwareVersion` / `manufacturer` / `model`
 # / `productClass` from the standard `Device.DeviceInfo.*` paths that any
 # USP agent reports as part of its data model.
-name: usp-deviceinfo
-priority: 10
-description: |
-  Baseline identity enrichment for any TR-369 / USP agent reporting the
-  standard TR-181 `Device.DeviceInfo.*` subtree. Operators add vendor
-  overrides at higher priority to handle non-standard `X_VENDOR_*` paths.
-enrichments:
-  - attribute: firmwareVersion
-    sources:
-      - Device.DeviceInfo.SoftwareVersion
-  - attribute: manufacturer
-    sources:
-      - Device.DeviceInfo.Manufacturer
-  - attribute: model
-    sources:
-      - Device.DeviceInfo.ModelName
-  - attribute: productClass
-    sources:
-      - Device.DeviceInfo.ProductClass
+apiVersion: identity.herder.io/v1alpha1
+kind: IdentityProfile
+metadata:
+  name: usp-deviceinfo
+spec:
+  priority: 10
+  description: |
+    Baseline identity enrichment for any TR-369 / USP agent reporting the
+    standard TR-181 `Device.DeviceInfo.*` subtree. Operators add vendor
+    overrides at higher priority to handle non-standard `X_VENDOR_*` paths.
+  enrichments:
+    - attribute: firmwareVersion
+      sources:
+        - Device.DeviceInfo.SoftwareVersion
+    - attribute: manufacturer
+      sources:
+        - Device.DeviceInfo.Manufacturer
+    - attribute: model
+      sources:
+        - Device.DeviceInfo.ModelName
+    - attribute: productClass
+      sources:
+        - Device.DeviceInfo.ProductClass

@@ -1,8 +1,12 @@
-name: seed-first-contact
-triggers:
-  - first_contact
-deviceSelector: {}
-desired:
-  script: "scripts/first_contact.ts"
-priority: 50
-enabled: true
+apiVersion: provisioning.herder.io/v1alpha1
+kind: ProvisioningRule
+metadata:
+  name: seed-first-contact
+spec:
+  triggers:
+    - first_contact
+  deviceSelector: {}
+  desired:
+    script: "provisioning/scripts/first_contact.ts"
+  priority: 50
+  enabled: true

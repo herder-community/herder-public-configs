@@ -18,51 +18,54 @@
 # TR-098, arris-hnc.ts for Arris HNC). Operators wanting to scope
 # more narrowly can pin a more specific dashboard via the override
 # table.
-schemaVersion: 1
-name: topology-default
-title: Device Topology
-description: |
-  Operator-facing topology view: gateway → extenders → clients with
-  per-edge RSSI overlay (when reported). Auto-resolves on any gateway-
-  class CPE (TR-098 `igd` or TR-181 `device`).
-deviceSelector:
-  # NOTE: matchExpressions semantics are AND (every expression must
-  # be satisfied; backend/internal/mapping/selector/match.go:33). The
-  # spec called for "dataModel:igd OR dataModel:device", but that's
-  # not directly expressible in one selector — the underlying
-  # mechanism gives us AND only. Targeting `dataModel:device` covers
-  # TR-181 single-stack and TR-098+TR-181 dual-stack gateways. A
-  # paired `topology-default-tr098.yaml` (filed as a follow-up to
-  # #491) will match the TR-098-only fleet. Operators wanting earlier
-  # coverage on a TR-098 CPE can pin this dashboard via
-  # `/api/v1/devices/{id}/dashboard/override`.
-  matchExpressions:
-    - { key: "dataModel:device", operator: Exists }
-defaultTimeRange:
-  from: { kind: relative, expr: "now-1h" }
-  to:   { kind: relative, expr: "now" }
-defaultRefreshIntervalMs: 30000
-panels:
-  - id: panel-topology
-    kind: topology
-    title: Topology
-    description: |
-      Live tree of devices on this CPE's network, with per-edge link
-      metrics (RSSI by default; the panel options can switch to any
-      vendor-emitted metric).
-    layout: { x: 0, y: 0, w: 12, h: 16 }
-    queries:
-      - refId: A
-        version: 1
-        datasource: topology
-        query: {}
-    config:
-      visualization: tree
-      overlay:
-        field: rssi_dbm
-        thresholds:
-          - { at: -90, color: "var(--chart-5)" }
-          - { at: -70, color: "var(--chart-4)" }
-          - { at: -55, color: "var(--chart-2)" }
-      showLegend: true
-      enableDeepLink: true
+apiVersion: dashboards.herder.io/v1alpha1
+kind: Dashboard
+metadata:
+  name: topology-default
+spec:
+  title: Device Topology
+  description: |
+    Operator-facing topology view: gateway → extenders → clients with
+    per-edge RSSI overlay (when reported). Auto-resolves on any gateway-
+    class CPE (TR-098 `igd` or TR-181 `device`).
+  deviceSelector:
+    # NOTE: matchExpressions semantics are AND (every expression must
+    # be satisfied; backend/internal/mapping/selector/match.go:33). The
+    # spec called for "dataModel:igd OR dataModel:device", but that's
+    # not directly expressible in one selector — the underlying
+    # mechanism gives us AND only. Targeting `dataModel:device` covers
+    # TR-181 single-stack and TR-098+TR-181 dual-stack gateways. A
+    # paired `topology-default-tr098.yaml` (filed as a follow-up to
+    # #491) will match the TR-098-only fleet. Operators wanting earlier
+    # coverage on a TR-098 CPE can pin this dashboard via
+    # `/api/v1/devices/{id}/dashboard/override`.
+    matchExpressions:
+      - {key: "dataModel:device", operator: Exists}
+  defaultTimeRange:
+    from: {kind: relative, expr: "now-1h"}
+    to: {kind: relative, expr: "now"}
+  defaultRefreshIntervalMs: 30000
+  panels:
+    - id: panel-topology
+      kind: topology
+      title: Topology
+      description: |
+        Live tree of devices on this CPE's network, with per-edge link
+        metrics (RSSI by default; the panel options can switch to any
+        vendor-emitted metric).
+      layout: {x: 0, y: 0, w: 12, h: 16}
+      queries:
+        - refId: A
+          version: 1
+          datasource: topology
+          query: {}
+      config:
+        visualization: tree
+        overlay:
+          field: rssi_dbm
+          thresholds:
+            - {at: -90, color: "var(--chart-5)"}
+            - {at: -70, color: "var(--chart-4)"}
+            - {at: -55, color: "var(--chart-2)"}
+        showLegend: true
+        enableDeepLink: true
