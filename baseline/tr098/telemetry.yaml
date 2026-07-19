@@ -1,0 +1,349 @@
+# Telemetry profile: TR-098 system identity.
+#
+# Collects device identity, firmware, and uptime — the minimum set
+# needed for fleet identity dashboards and firmware-distribution views.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: generic TR-098 baseline — match-all. Wildcard paths + standard
+# InternetGatewayDevice.* schema means this is safe to ship against any
+# TR-098-speaking CPE. Operators narrow scope in their fork by adding a
+# deviceSelector (matchLabels / matchExpressions on manufacturer, model,
+# firmwareVersion, tag:*, group_path:*, etc.).
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr098-system
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:igd"
+        operator: Exists
+  parameters:
+    - path: "InternetGatewayDevice.DeviceInfo.HardwareVersion"
+      interval: 0
+    - path: "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+      interval: 0
+    - path: "InternetGatewayDevice.DeviceInfo.UpTime"
+      interval: 0
+    # --- MemoryStatus (TR-098 §DeviceInfo.MemoryStatus) ---
+    # Total/Free in KB. Memory-usage dashboards compute
+    # (Total - Free) / Total * 100 with NULLIF on the denominator to
+    # survive firmware that reports Total=0.
+    - path: "InternetGatewayDevice.DeviceInfo.MemoryStatus.Total"
+      interval: 0
+    - path: "InternetGatewayDevice.DeviceInfo.MemoryStatus.Free"
+      interval: 0
+    # --- ProcessStatus (TR-098 §DeviceInfo.ProcessStatus) ---
+    # CPUUsage is a percentage (0-100) averaged across CPUs.
+    - path: "InternetGatewayDevice.DeviceInfo.ProcessStatus.CPUUsage"
+      interval: 0
+    # --- TemperatureStatus (firmware-dependent; wildcard-safe if absent) ---
+    # Name is operator-facing label; Value in °C; Status is Enabled/Disabled/Error.
+    - path: "InternetGatewayDevice.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Name"
+      interval: 0
+    - path: "InternetGatewayDevice.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Value"
+      interval: 0
+    - path: "InternetGatewayDevice.DeviceInfo.TemperatureStatus.TemperatureSensor.*.Status"
+      interval: 0
+---
+# Telemetry profile: TR-098 WAN link + L3 connection state.
+#
+# Covers three concerns:
+#   1. L1 physical link state (WANCommonInterfaceConfig) — WAN access type,
+#      link status, max bitrates, enable flag.
+#   2. Aggregate byte/packet counters (WANCommonInterfaceConfig.Total*) —
+#      total-across-all-connections, works regardless of L3 type (IP/PPP).
+#   3. L3 connection state — both WANIPConnection (DHCP/static) and
+#      WANPPPConnection (PPPoE/PPPoA) paths. Wildcard-safe: whichever
+#      the CPE doesn't use returns zero instances, no fault.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: generic TR-098 baseline — match-all. Wildcard paths + standard
+# InternetGatewayDevice.* schema means this is safe to ship against any
+# TR-098-speaking CPE. Operators narrow scope in their fork by adding a
+# deviceSelector (matchLabels / matchExpressions on manufacturer, model,
+# firmwareVersion, tag:*, group_path:*, etc.).
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr098-wan
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:igd"
+        operator: Exists
+  parameters:
+    # --- WANCommonInterfaceConfig: L1 state (always present) ---
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.WANAccessType"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.PhysicalLinkStatus"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.EnabledForInternet"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.Layer1UpstreamMaxBitRate"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.Layer1DownstreamMaxBitRate"
+      interval: 0
+    # --- WANCommonInterfaceConfig: aggregate counters (covers both IP and PPP) ---
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.TotalBytesSent"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.TotalBytesReceived"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.TotalPacketsSent"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANCommonInterfaceConfig.TotalPacketsReceived"
+      interval: 0
+    # --- WANIPConnection: L3 DHCP/static (wildcard-safe if absent) ---
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ConnectionStatus"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ConnectionType"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Uptime"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.LastConnectionError"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.AddressingType"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.ExternalIPAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.SubnetMask"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.DefaultGateway"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.DNSServers"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.MACAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.NATEnabled"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Stats.EthernetBytesSent"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Stats.EthernetBytesReceived"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Stats.EthernetPacketsSent"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANIPConnection.*.Stats.EthernetPacketsReceived"
+      interval: 0
+    # --- WANPPPConnection: L3 PPPoE/PPPoA (wildcard-safe if absent) ---
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ConnectionStatus"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ConnectionType"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Uptime"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.LastConnectionError"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.ExternalIPAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.DNSServers"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.MACAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.TransportType"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.PPPoEACName"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.PPPoEServiceName"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Username"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Stats.EthernetBytesSent"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Stats.EthernetBytesReceived"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Stats.EthernetPacketsSent"
+      interval: 0
+    - path: "InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.Stats.EthernetPacketsReceived"
+      interval: 0
+---
+# Telemetry profile: TR-098 WiFi per-SSID/radio.
+#
+# Covers four concerns:
+#   1. Radio/SSID state — enable flag, status, SSID, BSSID, channel,
+#      802.11 standard variant, beacon type.
+#   2. Security/auth posture — authentication mode, encryption modes
+#      (WPA + 802.11i), SSID advertisement, transmit power. Useful for
+#      auditing fleet-wide security (detect open SSIDs, WEP leakage,
+#      hidden-SSID deployments).
+#   3. Byte counters — aggregate per-SSID BytesSent/BytesReceived.
+#      Other Stats counters (Errors, Discards, Packets, Multicast, Unicast)
+#      excluded as operationally low-value.
+#   4. Associated clients — MAC, IP, auth state, last transmit rate.
+#      Signal strength / RSSI deliberately NOT included: those paths are
+#      vendor-specific X_<VENDOR>_* extensions on TR-098 CPE. Operators
+#      wanting per-client signal strength layer a vendor profile on top.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: generic TR-098 baseline — match-all. Wildcard paths + standard
+# InternetGatewayDevice.* schema means this is safe to ship against any
+# TR-098-speaking CPE. Operators narrow scope in their fork by adding a
+# deviceSelector (matchLabels / matchExpressions on manufacturer, model,
+# firmwareVersion, tag:*, group_path:*, etc.).
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr098-wifi
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:igd"
+        operator: Exists
+  parameters:
+    # --- Radio / SSID state ---
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Status"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Enable"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.SSID"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.BSSID"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Channel"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Standard"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.BeaconType"
+      interval: 0
+    # --- Security / auth posture ---
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.BasicAuthenticationMode"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.WPAEncryptionModes"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.IEEE11iEncryptionModes"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.SSIDAdvertisementEnabled"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.TransmitPower"
+      interval: 0
+    # --- Byte counters ---
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Stats.BytesSent"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.Stats.BytesReceived"
+      interval: 0
+    # --- Association counts ---
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.TotalAssociations"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDeviceNumberOfEntries"
+      interval: 0
+    # --- Associated clients (standard TR-098 only, no X_<VENDOR>_*) ---
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.AssociatedDeviceMACAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.AssociatedDeviceIPAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.AssociatedDeviceAuthenticationState"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.WLANConfiguration.*.AssociatedDevice.*.LastDataTransmitRate"
+      interval: 0
+---
+# Telemetry profile: TR-098 LAN Ethernet interface.
+#
+# Per-port LAN Ethernet link state and aggregate byte counters.
+# Error/discard/multicast/unicast/packet counters deliberately excluded —
+# operationally low-value for day-1 operator dashboards.
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: generic TR-098 baseline — match-all. Wildcard paths + standard
+# InternetGatewayDevice.* schema means this is safe to ship against any
+# TR-098-speaking CPE. Operators narrow scope in their fork by adding a
+# deviceSelector (matchLabels / matchExpressions on manufacturer, model,
+# firmwareVersion, tag:*, group_path:*, etc.).
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr098-lan-eth
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:igd"
+        operator: Exists
+  parameters:
+    - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Status"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.MACAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesSent"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.LANEthernetInterfaceConfig.*.Stats.BytesReceived"
+      interval: 0
+---
+# Telemetry profile: TR-098 connected hosts table.
+#
+# Per-device table of clients currently or recently associated with the
+# gateway's LAN — wired and wireless. Covers IPv4, IPv6 (both legacy
+# scalar and modern instance-table forms), MAC, interface type, and
+# L2 interface back-reference so dashboards can correlate hosts with
+# WLAN configs or wired ports.
+#
+# LeaseTimeRemaining deliberately excluded — it counts down every second,
+# a poor time-series fit (pure noise in the history hypertable).
+#
+# All params interval=0 (passive — one GPV per natural Inform session,
+# no Connection Request scheduling).
+#
+# Scope: generic TR-098 baseline — match-all. Wildcard paths + standard
+# InternetGatewayDevice.* schema means this is safe to ship against any
+# TR-098-speaking CPE. Operators narrow scope in their fork by adding a
+# deviceSelector (matchLabels / matchExpressions on manufacturer, model,
+# firmwareVersion, tag:*, group_path:*, etc.).
+#
+# Priority 10 — operator-shipped vendor profiles (typical priority 50+)
+# override on conflicting paths.
+apiVersion: telemetry.herder.io/v1alpha1
+kind: TelemetryProfile
+metadata:
+  name: tr098-lan-hosts
+spec:
+  priority: 10
+  deviceSelector:
+    matchExpressions:
+      - key: "dataModel:igd"
+        operator: Exists
+  parameters:
+    # --- Table cardinality ---
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.HostNumberOfEntries"
+      interval: 0
+    # --- Per-host fields ---
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.Active"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.HostName"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.MACAddress"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.AddressSource"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.InterfaceType"
+      interval: 0
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.Layer2Interface"
+      interval: 0
+    # --- IPv6: legacy scalar form (older TR-098 variants) ---
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPv6Address"
+      interval: 0
+    # --- IPv6: modern instance-table form ---
+    - path: "InternetGatewayDevice.LANDevice.*.Hosts.Host.*.IPv6Address.*.IPAddress"
+      interval: 0

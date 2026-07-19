@@ -1,12 +1,13 @@
 apiVersion: provisioning.herder.io/v1alpha1
 kind: ProvisioningRule
 metadata:
-  name: seed-first-contact
+  name: seed-periodic
 spec:
   triggers:
-    - first_contact
+    - periodic
+    - connection_request
   deviceSelector: {}
   desired:
-    script: "provisioning/scripts/first_contact.ts"
+    script: "periodic.ts"
   priority: 50
   enabled: true
