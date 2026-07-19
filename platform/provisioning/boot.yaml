@@ -1,13 +1,12 @@
 apiVersion: provisioning.herder.io/v1alpha1
 kind: ProvisioningRule
 metadata:
-  name: seed-periodic
+  name: seed-boot
 spec:
   triggers:
-    - periodic
-    - connection_request
+    - boot
   deviceSelector: {}
   desired:
-    script: "provisioning/scripts/periodic.ts"
+    script: "boot.ts"
   priority: 50
   enabled: true

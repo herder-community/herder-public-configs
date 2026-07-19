@@ -1,3 +1,31 @@
+# Profile for Arris NVG series TR-098 devices.
+#
+# Arris NVG residential gateways use the InternetGatewayDevice data model.
+# Matched by OUI + product class. Operators should add more product classes
+# as they onboard additional Arris models.
+apiVersion: mapping.herder.io/v1alpha1
+kind: MappingProfile
+metadata:
+  name: arris-nvg-tr098
+spec:
+  priority: 50
+  deviceSelector:
+    matchLabels:
+      oui: "0000C5"
+    matchExpressions:
+      - key: productClass
+        operator: In
+        values:
+          - "NVG578LX"
+          - "NVG448BQ"
+          - "NVG468MQ"
+          - "NVG589"
+          - "NVG599"
+  parameterMappings:
+    - device-info-tr098
+    - mgmt-tr098
+    - diagnostics-tr098
+---
 # Telemetry profile: Arris TR-098 WiFi + mesh extensions.
 #
 # Vendor-specific X_0000C5_* parameters on top of the tr098-* baseline.
@@ -136,3 +164,40 @@ spec:
       interval: 0
     - path: "InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.*.X_0000C5_OperatingFrequencyBand"
       interval: 0
+---
+# Reference enrichment rule: Arris TR-098 per-client WiFi labels.
+#
+# Emits labeled rows per Inform from three independent source trees —
+# each section is silent-skipped when the device firmware doesn't expose
+# it, so one rule covers several Arris variants:
+#
+#   1. HNC.Steer.SummaryStats.STA.*  — per-client band-steering counters,
+#      keyed on the Arris client MAC. Emitted even on gateways with zero
+#      currently-associated clients (historical steering record).
+#   2. WLANConfiguration.*.AssociatedDevice.* + X_0000C5_WLANStats tree —
+#      live per-client RSSI on gateway-attached clients.
+#   3. X_0000C5_Wireless.HNC.HNE.*.Radio.*.SSID.*.STA.* — mesh/extender
+#      clients (only present when a paired extender is Informed).
+#
+# Labels carry stable client identity (client_mac + hostname when
+# Hosts.Host is populated) plus topology (via, band) so historical
+# per-client queries stay coherent across STA-index churn.
+#
+# Depends on the Arris vendor telemetry profile (arris-wifi-tr098.yaml).
+# Without that profile, the enrichment script runs but emits no rows.
+#
+# Selector matches CPE whose manufacturer string is "Arris" or "ARRIS" —
+# firmware reports either across the product family. OUI not constrained
+# (the X_0000C5_* paths are self-selecting).
+apiVersion: telemetry.herder.io/v1alpha1
+kind: EnrichmentRule
+metadata:
+  name: arris-client-wifi
+spec:
+  priority: 50
+  deviceSelector:
+    matchExpressions:
+      - key: manufacturer
+        operator: In
+        values: [Arris, ARRIS]
+  script: arris-client-rssi-labels.ts
